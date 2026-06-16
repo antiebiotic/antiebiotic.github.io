@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Kanban v1.3.1A • 카카오톡 스타일 칸반보드</title>
+  <meta name="application-name" content="Kanban">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kanban">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Kanban v1.3.1A • KakaoTalk-style board with login">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FEE500'/%3E%3Ctext x='50' y='68' text-anchor='middle' font-size='50' font-weight='bold' fill='%23000' font-family='sans-serif'%3EK%3C/text%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='38' fill='%23FEE500'/%3E%3Ctext x='96' y='130' text-anchor='middle' font-size='96' font-weight='bold' fill='%23000' font-family='sans-serif'%3EK%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bg-primary:#ffffff; --bg-secondary:#f9f9fb; --bg-tertiary:#f5f5f7; --bg-hover:#e8e8ed;
+      --text-primary:#1d1d1f; --text-secondary:#86868b; --text-tertiary:#aeaeb2;
+      --border-color:#e8e8ed; --border-light:#f0f0f5;
+      --accent-color:#FEE500; --accent-hover:#f5da00;
+      --danger-bg:#fff1f0; --danger-text:#cf1322;
+      --card-bg:#ffffff; --modal-overlay:rgba(0,0,0,0.4);
+      --toast-bg:#1d1d1f; --toast-text:#ffffff;
+      --input-bg:#ffffff; --scrollbar-thumb:#d2d2d7; --column-bg:#ffffff;
+      --label-feature-bg:#e5f0ff; --label-feature-text:#0066cc;
+      --label-done-bg:#e5ffe5; --label-done-text:#008800;
+      --label-urgent-bg:#ffe5e5; --label-urgent-text:#cc0000;
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    .dark-mode {
+      --bg-primary:#000000; --bg-secondary:#0a0a0a; --bg-tertiary:#141414; --bg-hover:#1f1f1f;
+      --text-primary:#f5f5f7; --text-secondary:#8e8e93; --text-tertiary:#636366;
+      --border-color:#1c1c1e; --border-light:#141414;
+      --card-bg:#0a0a0a; --modal-overlay:rgba(0,0,0,0.85);
+      --toast-bg:#f5f5f7; --toast-text:#000000;
+      --input-bg:#141414; --scrollbar-thumb:#2c2c2e; --column-bg:#0a0a0a;
+      --label-feature-bg:#0a1a2e; --label-feature-text:#64b5f6;
+      --label-done-bg:#0a1a0a; --label-done-text:#81c784;
+      --label-urgent-bg:#1a0a0a; --label-urgent-text:#ef5350;
+      --danger-bg:#1a0a0a; --danger-text:#ef5350;
+    }
+    body {
+      background:#000; font-family:'Apple SD Gothic Neo','Noto Sans KR','Segoe UI','Helvetica Neue',sans-serif;
+      height:100dvh; width:100dvw; overflow:hidden; color:var(--text-primary);
+      display:flex; flex-direction:column; transition:background 0.3s,color 0.3s;
+      -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent;
+    }
+    .kanban-app {
+      display:flex; flex-direction:column; height:100dvh; width:100dvw;
+      background:var(--bg-primary); overflow:hidden; transition:background 0.3s;
+    }
+    .app-header {
+      padding:0 14px; height:50px; background:var(--bg-primary);
+      border-bottom:0.5px solid var(--border-color); display:flex; align-items:center;
+      justify-content:space-between; flex-shrink:0; min-height:50px; gap:6px;
+      transition:background 0.3s,border-color 0.3s; padding-top:env(safe-area-inset-top,0px);
+    }
+    .header-left { display:flex; align-items:center; gap:6px; flex-shrink:0; min-width:0; }
+    .app-title { font-size:1.15rem; font-weight:700; color:var(--text-primary); letter-spacing:-0.3px; white-space:nowrap; }
+    .version-tag { font-size:0.65rem; color:var(--text-tertiary); font-weight:400; }
+    .header-actions { display:flex; align-items:center; gap:4px; flex-shrink:0; }
+    .header-btn {
+      background:none; border:none; font-size:1.15rem; color:var(--text-primary);
+      cursor:pointer; padding:8px; border-radius:50%; transition:background 0.15s;
+      flex-shrink:0; width:36px; height:36px; display:flex; align-items:center; justify-content:center; position:relative;
+    }
+    .header-btn:active { background:var(--bg-tertiary); transform:scale(0.95); }
+    .notification-dot { position:absolute; top:6px; right:6px; width:6px; height:6px; background:#FF3B30; border-radius:50%; }
+    .avatar-btn {
+      width:32px; height:32px; border-radius:50%; background:var(--accent-color);
+      display:flex; align-items:center; justify-content:center; font-size:0.75rem;
+      font-weight:700; cursor:pointer; border:none; overflow:hidden; flex-shrink:0;
+      padding:0; transition:transform 0.15s; color:#000; margin-left:2px;
+    }
+    .avatar-btn:active { transform:scale(0.95); }
+    .avatar-btn img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .toolbar {
+      padding:6px 14px; background:var(--bg-primary); border-bottom:0.5px solid var(--border-color);
+      display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+      gap:8px; min-height:40px; transition:background 0.3s,border-color 0.3s;
+    }
+    .view-tabs { display:flex; gap:2px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; align-items:center; flex:1; min-width:0; }
+    .view-tabs::-webkit-scrollbar { display:none; }
+    .view-tab {
+      padding:5px 10px; border-radius:14px; font-size:0.78rem; font-weight:600;
+      cursor:pointer; border:none; background:none; color:var(--text-secondary);
+      transition:all 0.2s; font-family:inherit; white-space:nowrap; letter-spacing:-0.2px;
+    }
+    .view-tab.active { background:var(--accent-color); color:#000; font-weight:700; }
+    .view-tab .count { font-size:0.7rem; margin-left:2px; opacity:0.7; }
+    .toolbar-actions { display:flex; gap:2px; align-items:center; flex-shrink:0; }
+    .btn {
+      padding:5px 8px; border-radius:14px; font-size:0.75rem; font-weight:600;
+      cursor:pointer; border:none; font-family:inherit; transition:all 0.15s;
+      display:flex; align-items:center; gap:3px; white-space:nowrap; letter-spacing:-0.2px;
+      background:none; color:var(--text-secondary);
+    }
+    .btn:active { transform:scale(0.95); background:var(--bg-tertiary); }
+    .btn-primary { background:var(--accent-color); color:#000; font-weight:700; }
+    .btn-primary:active { background:var(--accent-hover); }
+    .btn-danger { color:#FF3B30; }
+    .board-container {
+      flex:1; overflow-x:auto; overflow-y:auto; padding:12px; display:flex; gap:12px;
+      background:var(--bg-secondary); min-height:0; -webkit-overflow-scrolling:touch; transition:background 0.3s;
+    }
+    .column {
+      min-width:260px; max-width:360px; flex:1 0 auto; background:var(--column-bg);
+      border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px;
+      border:0.5px solid var(--border-color); transition:border-color 0.2s,background 0.3s; height:fit-content; max-height:100%;
+    }
+    .column.drag-over { border-color:var(--accent-color); }
+    .column-header { display:flex; align-items:center; justify-content:space-between; padding:0 2px 4px; flex-shrink:0; }
+    .column-title-group { display:flex; align-items:center; gap:6px; min-width:0; }
+    .column-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .column-name { font-weight:700; font-size:0.85rem; color:var(--text-primary); white-space:nowrap; letter-spacing:-0.2px; }
+    .column-count { font-size:0.7rem; color:var(--text-tertiary); font-weight:500; }
+    .column-actions { display:flex; gap:1px; }
+    .column-action-btn {
+      background:none; border:none; color:var(--text-tertiary); cursor:pointer;
+      padding:4px 6px; border-radius:50%; font-size:0.8rem; transition:all 0.15s;
+      flex-shrink:0; width:26px; height:26px; display:flex; align-items:center; justify-content:center;
+    }
+    .column-action-btn:active { background:var(--bg-tertiary); color:var(--text-primary); }
+    .card-list { display:flex; flex-direction:column; gap:6px; overflow-y:auto; flex:1; min-height:0; padding-right:2px; max-height:calc(100dvh - 240px); }
+    .task-card {
+      background:var(--card-bg); border-radius:10px; padding:10px 12px;
+      border:0.5px solid var(--border-color); cursor:pointer; transition:all 0.15s ease;
+      display:flex; flex-direction:column; gap:6px; user-select:none; flex-shrink:0;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .task-card:active { transform:scale(0.98); background:var(--bg-tertiary); }
+    .task-card.hidden { display:none; }
+    .task-card.dragging { opacity:0.3; transform:scale(0.95); }
+    .card-labels { display:flex; gap:3px; flex-wrap:wrap; }
+    .label { padding:2px 6px; border-radius:8px; font-size:0.6rem; font-weight:700; letter-spacing:-0.1px; }
+    .label.urgent { background:var(--label-urgent-bg); color:var(--label-urgent-text); }
+    .label.feature { background:var(--label-feature-bg); color:var(--label-feature-text); }
+    .label.done { background:var(--label-done-bg); color:var(--label-done-text); }
+    .card-title { font-weight:600; font-size:0.82rem; color:var(--text-primary); line-height:1.35; display:flex; align-items:flex-start; gap:5px; letter-spacing:-0.2px; }
+    .card-title i { color:var(--accent-color); margin-top:2px; flex-shrink:0; font-size:0.7rem; }
+    .card-description { font-size:0.72rem; color:var(--text-secondary); line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .card-meta { display:flex; align-items:center; justify-content:space-between; font-size:0.65rem; color:var(--text-tertiary); flex-wrap:wrap; gap:4px; }
+    .card-assignee { display:flex; align-items:center; gap:3px; }
+    .card-assignee-avatar {
+      width:16px; height:16px; border-radius:50%; background:var(--accent-color);
+      display:flex; align-items:center; justify-content:center; font-size:0.55rem;
+      font-weight:700; color:#000; flex-shrink:0; overflow:hidden;
+    }
+    .card-assignee-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .card-date { display:flex; align-items:center; gap:2px; }
+    .card-actions-row { display:flex; gap:3px; margin-top:2px; }
+    .card-move-btn {
+      flex:1; padding:4px 5px; border:0.5px solid var(--border-color);
+      background:var(--bg-tertiary); border-radius:6px; font-size:0.6rem;
+      cursor:pointer; transition:all 0.15s; color:var(--text-secondary);
+      font-family:inherit; text-align:center; -webkit-tap-highlight-color:transparent;
+    }
+    .card-move-btn:active { background:var(--accent-color); border-color:var(--accent-color); color:#000; }
+    .empty-column-message { text-align:center; padding:20px 10px; color:var(--text-tertiary); font-size:0.75rem; display:none; letter-spacing:-0.2px; }
+    .empty-column-message i { font-size:1.3rem; display:block; margin-bottom:4px; opacity:0.5; }
+    .add-column-btn {
+      min-width:260px; max-width:360px; flex:1 0 auto; background:none;
+      border:1px dashed var(--border-color); border-radius:14px; padding:20px;
+      display:flex; align-items:center; justify-content:center; gap:5px; cursor:pointer;
+      color:var(--text-tertiary); font-weight:600; font-size:0.82rem; transition:all 0.2s;
+      height:fit-content; font-family:inherit; letter-spacing:-0.2px;
+    }
+    .add-column-btn:active { border-color:var(--accent-color); color:var(--accent-color); }
+    .modal-overlay {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:var(--modal-overlay); z-index:1000; display:none; align-items:flex-end; justify-content:center;
+    }
+    .modal-overlay.active { display:flex; }
+    .modal-sheet {
+      background:var(--bg-primary); border-radius:16px 16px 0 0; width:100%; max-width:500px;
+      max-height:85vh; overflow-y:auto; animation:slideUp 0.25s ease; transition:background 0.3s;
+      padding-bottom:var(--safe-bottom);
+    }
+    @keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
+    .modal-header { padding:14px 18px; border-bottom:0.5px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; }
+    .modal-title { font-weight:700; font-size:1rem; color:var(--text-primary); letter-spacing:-0.2px; }
+    .modal-close { background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-secondary); padding:6px; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; }
+    .modal-close:active { background:var(--bg-tertiary); }
+    .modal-body { padding:14px 18px; }
+    .form-group { margin-bottom:12px; }
+    .form-label { display:block; font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-bottom:4px; letter-spacing:-0.2px; }
+    .form-input,.form-textarea,.form-select {
+      width:100%; padding:10px 12px; border:0.5px solid var(--border-color); border-radius:8px;
+      font-size:0.85rem; font-family:inherit; outline:none; transition:border 0.2s;
+      background:var(--input-bg); color:var(--text-primary); letter-spacing:-0.2px;
+    }
+    .form-input:focus,.form-textarea:focus,.form-select:focus { border-color:var(--accent-color); }
+    .form-textarea { resize:vertical; min-height:50px; }
+    .modal-footer { padding:10px 18px 14px; border-top:0.5px solid var(--border-color); display:flex; gap:8px; }
+    .search-overlay {
+      position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-primary);
+      z-index:1001; display:none; flex-direction:column; padding:0 14px;
+      padding-top:env(safe-area-inset-top,0px); padding-bottom:var(--safe-bottom);
+    }
+    .search-overlay.active { display:flex; }
+    .search-header { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:0.5px solid var(--border-color); flex-shrink:0; }
+    .search-back { background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--text-primary); padding:8px; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; }
+    .search-input-field { flex:1; padding:10px 12px; border:none; border-radius:8px; font-size:0.95rem; font-family:inherit; outline:none; background:var(--bg-tertiary); color:var(--text-primary); }
+    .search-results { flex:1; overflow-y:auto; padding:10px 0; display:flex; flex-direction:column; gap:6px; }
+    .search-result-item { padding:12px 14px; background:var(--bg-tertiary); border-radius:10px; cursor:pointer; border:0.5px solid transparent; }
+    .search-result-item:active { border-color:var(--accent-color); }
+    .search-result-title { font-weight:600; font-size:0.85rem; color:var(--text-primary); }
+    .search-result-meta { font-size:0.7rem; color:var(--text-tertiary); margin-top:3px; }
+    .search-empty { text-align:center; color:var(--text-tertiary); padding:40px 20px; font-size:0.85rem; }
+    .add-task-popup {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:var(--modal-overlay); z-index:1001; display:none; align-items:flex-end; justify-content:center;
+    }
+    .add-task-popup.active { display:flex; }
+    .add-task-sheet {
+      background:var(--bg-primary); border-radius:16px 16px 0 0; width:100%; max-width:500px;
+      padding:6px 0 16px; animation:slideUp 0.25s ease; padding-bottom:var(--safe-bottom);
+    }
+    .sheet-handle { width:32px; height:4px; background:var(--border-color); border-radius:2px; margin:8px auto 10px; }
+    .sheet-header { padding:0 18px 10px; border-bottom:0.5px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; }
+    .sheet-title { font-weight:700; font-size:1rem; color:var(--text-primary); }
+    .sheet-close { background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-secondary); padding:6px; border-radius:50%; }
+    .sheet-body { padding:12px 18px; }
+    .quick-add-input { width:100%; padding:12px 14px; border:0.5px solid var(--border-color); border-radius:10px; font-size:0.9rem; font-family:inherit; outline:none; margin-bottom:8px; background:var(--input-bg); color:var(--text-primary); }
+    .quick-add-input:focus { border-color:var(--accent-color); }
+    .quick-add-select { width:100%; padding:10px 12px; border:0.5px solid var(--border-color); border-radius:10px; font-size:0.85rem; font-family:inherit; outline:none; background:var(--input-bg); color:var(--text-primary); }
+    .sheet-actions { display:flex; gap:8px; padding:8px 18px 0; }
+    .profile-pic-section { display:flex; align-items:center; gap:14px; margin-bottom:14px; padding:12px; background:var(--bg-tertiary); border-radius:12px; }
+    .profile-pic-large { width:56px; height:56px; border-radius:50%; background:var(--accent-color); display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:700; overflow:hidden; flex-shrink:0; color:#000; }
+    .profile-pic-large img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .profile-pic-actions { display:flex; flex-direction:column; gap:5px; }
+    .settings-section { margin-bottom:14px; }
+    .settings-section h4 { font-size:0.8rem; font-weight:700; margin-bottom:6px; color:var(--text-primary); }
+    .color-options { display:flex; gap:6px; flex-wrap:wrap; }
+    .color-dot { width:28px; height:28px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:all 0.15s; }
+    .color-dot:active { transform:scale(1.1); }
+    .color-dot.active { border-color:var(--text-primary); }
+    .share-link-box { display:flex; gap:6px; align-items:center; background:var(--bg-tertiary); padding:8px 12px; border-radius:8px; margin-top:6px; }
+    .share-link-box input { flex:1; border:none; background:none; font-size:0.75rem; color:var(--text-primary); font-family:monospace; outline:none; }
+    .dev-section { background:var(--bg-tertiary); border-radius:12px; padding:14px; margin-top:4px; }
+    .dev-section h4 { font-size:0.8rem; font-weight:700; color:var(--text-primary); margin-bottom:8px; }
+    .dev-info { font-size:0.7rem; color:var(--text-tertiary); margin-bottom:8px; line-height:1.4; }
+    .dev-badge { display:inline-block; background:#AF52DE; color:#fff; padding:2px 8px; border-radius:10px; font-size:0.65rem; font-weight:700; margin-left:6px; }
+
+    /* Login Screen */
+    .login-screen {
+      position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-primary);
+      z-index:3000; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:24px; gap:24px; transition:background 0.3s;
+    }
+    .login-screen.hidden { display:none; }
+    .login-logo { width:80px; height:80px; background:var(--accent-color); border-radius:22px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; color:#000; }
+    .login-title { font-size:1.5rem; font-weight:700; color:var(--text-primary); letter-spacing:-0.5px; }
+    .login-subtitle { font-size:0.85rem; color:var(--text-secondary); text-align:center; line-height:1.4; }
+    .login-form { width:100%; max-width:320px; display:flex; flex-direction:column; gap:10px; }
+    .login-input {
+      width:100%; padding:14px 16px; border:0.5px solid var(--border-color); border-radius:12px;
+      font-size:0.9rem; font-family:inherit; outline:none; background:var(--input-bg); color:var(--text-primary);
+      transition:border 0.2s; letter-spacing:-0.2px;
+    }
+    .login-input:focus { border-color:var(--accent-color); }
+    .login-btn {
+      width:100%; padding:14px; border-radius:12px; font-size:0.9rem; font-weight:700;
+      cursor:pointer; border:none; font-family:inherit; transition:all 0.15s;
+    }
+    .login-btn-primary { background:var(--accent-color); color:#000; }
+    .login-btn-primary:active { background:var(--accent-hover); }
+    .login-btn-secondary { background:var(--bg-tertiary); color:var(--text-primary); }
+    .login-btn-kakao { background:#FEE500; color:#000; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .login-divider { display:flex; align-items:center; gap:12px; color:var(--text-tertiary); font-size:0.75rem; width:100%; max-width:320px; }
+    .login-divider::before,.login-divider::after { content:''; flex:1; height:0.5px; background:var(--border-color); }
+    .login-error { color:#FF3B30; font-size:0.75rem; text-align:center; min-height:18px; }
+    .login-toggle { font-size:0.75rem; color:var(--text-secondary); cursor:pointer; text-align:center; }
+    .login-toggle:hover { color:var(--accent-color); }
+
+    .toast-notification {
+      position:fixed; bottom:calc(50px + var(--safe-bottom)); left:50%; transform:translateX(-50%);
+      background:var(--toast-bg); color:var(--toast-text); padding:10px 20px; border-radius:20px;
+      font-size:0.8rem; font-weight:600; z-index:2000; opacity:0; transition:opacity 0.3s;
+      pointer-events:none; white-space:nowrap; letter-spacing:-0.2px; display:flex; align-items:center; gap:8px;
+    }
+    .toast-notification.show { opacity:1; }
+    .toast-undo { background:var(--accent-color); color:#000; border:none; padding:4px 10px; border-radius:12px; font-weight:700; cursor:pointer; font-size:0.75rem; font-family:inherit; }
+    .card-list::-webkit-scrollbar { width:2px; } .card-list::-webkit-scrollbar-thumb { background:var(--scrollbar-thumb); border-radius:2px; }
+    .board-container::-webkit-scrollbar { height:2px; } .board-container::-webkit-scrollbar-thumb { background:var(--scrollbar-thumb); border-radius:2px; }
+    @media(max-width:768px) {
+      .app-header { padding:0 10px; height:46px; min-height:46px; }
+      .app-title { font-size:1.05rem; }
+      .toolbar { padding:4px 10px; min-height:36px; }
+      .view-tab { padding:4px 8px; font-size:0.72rem; }
+      .board-container { flex-direction:column; padding:8px; gap:10px; }
+      .column,.add-column-btn { min-width:100%; max-width:100%; flex:0 0 auto; max-height:none; }
+      .card-list { max-height:35vh; }
+      .card-actions-row { display:flex!important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-logo"><i class="fas fa-columns"></i></div>
+    <div class="login-title">Kanban</div>
+    <div class="login-subtitle" id="loginSubtitle"><span data-ko="카카오톡 스타일 칸반보드" data-en="KakaoTalk-style Kanban Board">카카오톡 스타일 칸반보드</span></div>
+    <div class="login-error" id="loginError"></div>
+    <!-- Sign In Form -->
+    <form class="login-form" id="signInForm">
+      <input type="text" class="login-input" id="signInEmail" data-ko-placeholder="아이디" data-en-placeholder="Username" placeholder="아이디" autocomplete="username">
+      <input type="password" class="login-input" id="signInPassword" data-ko-placeholder="비밀번호" data-en-placeholder="Password" placeholder="비밀번호" autocomplete="current-password">
+      <button type="submit" class="login-btn login-btn-primary"><span data-ko="로그인" data-en="Sign In">로그인</span></button>
+    </form>
+    <!-- Sign Up Form (hidden by default) -->
+    <form class="login-form" id="signUpForm" style="display:none">
+      <input type="text" class="login-input" id="signUpName" data-ko-placeholder="이름" data-en-placeholder="Name" placeholder="이름">
+      <input type="text" class="login-input" id="signUpEmail" data-ko-placeholder="아이디" data-en-placeholder="Username" placeholder="아이디" autocomplete="username">
+      <input type="password" class="login-input" id="signUpPassword" data-ko-placeholder="비밀번호" data-en-placeholder="Password" placeholder="비밀번호" autocomplete="new-password">
+      <button type="submit" class="login-btn login-btn-primary"><span data-ko="회원가입" data-en="Sign Up">회원가입</span></button>
+    </form>
+    <div class="login-divider"><span data-ko="또는" data-en="or">또는</span></div>
+    <button class="login-btn login-btn-kakao" id="kakaoLoginBtn" style="max-width:320px"><i class="fas fa-comment"></i> <span data-ko="카카오로 계속하기" data-en="Continue with Kakao">카카오로 계속하기</span></button>
+    <button class="login-btn login-btn-secondary" id="guestLoginBtn" style="max-width:320px"><i class="fas fa-user"></i> <span data-ko="게스트로 계속하기" data-en="Continue as Guest">게스트로 계속하기</span></button>
+    <div class="login-toggle" id="loginToggle"><span data-ko="계정이 없으신가요? 회원가입" data-en="Don't have an account? Sign Up">계정이 없으신가요? 회원가입</span></div>
+  </div>
+
+  <!-- Main App -->
+  <div class="kanban-app" id="kanbanApp" style="display:none">
+    <header class="app-header">
+      <div class="header-left">
+        <span class="app-title">Kanban</span>
+        <span class="version-tag">v1.3.1A</span>
+      </div>
+      <div class="header-actions">
+        <button class="header-btn" id="searchBtn" title="Search"><i class="fas fa-search"></i></button>
+        <button class="header-btn" id="shareKakaoHeaderBtn" title="Share to KakaoTalk"><i class="fas fa-share-alt"></i></button>
+        <button class="header-btn" id="notificationsBtn" title="Notifications"><i class="far fa-bell"></i><span class="notification-dot"></span></button>
+        <button class="header-btn" id="settingsBtn" title="Settings"><i class="fas fa-cog"></i></button>
+        <button class="avatar-btn" id="profileBtn" title="Profile">
+          <img id="headerAvatar" src="" alt="Profile" style="display:none;">
+          <span id="headerAvatarText">ME</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="view-tabs" id="viewTabs">
+        <button class="view-tab active" data-filter="all"><span data-ko="전체" data-en="All">전체</span> <span class="count">0</span></button>
+        <button class="view-tab" data-filter="todo"><span data-ko="할 일" data-en="To Do">할 일</span> <span class="count">0</span></button>
+        <button class="view-tab" data-filter="inprogress"><span data-ko="진행중" data-en="In Progress">진행중</span> <span class="count">0</span></button>
+        <button class="view-tab" data-filter="done"><span data-ko="완료" data-en="Done">완료</span> <span class="count">0</span></button>
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn btn-primary" id="globalAddBtn"><i class="fas fa-plus"></i> <span data-ko="추가" data-en="Add">추가</span></button>
+      </div>
+    </div>
+
+    <main class="board-container" id="boardContainer"></main>
+  </div>
+
+  <div class="search-overlay" id="searchOverlay">
+    <div class="search-header"><button class="search-back" id="searchBack"><i class="fas fa-chevron-left"></i></button><input type="text" class="search-input-field" id="searchOverlayInput" data-ko-placeholder="작업 검색..." data-en-placeholder="Search tasks..." placeholder="작업 검색..."></div>
+    <div class="search-results" id="searchResults"><div class="search-empty"><span data-ko="검색어를 입력하세요" data-en="Type to search">검색어를 입력하세요</span></div></div>
+  </div>
+
+  <div class="modal-overlay" id="taskModal"><div class="modal-sheet"><div class="modal-header"><span class="modal-title" id="modalTitle">작업 상세</span><button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-group"><label class="form-label"><span data-ko="제목" data-en="Title">제목</span></label><input type="text" class="form-input" id="editTitle"></div><div class="form-group"><label class="form-label"><span data-ko="설명" data-en="Description">설명</span></label><textarea class="form-textarea" id="editDesc"></textarea></div><div class="form-group"><label class="form-label"><span data-ko="담당자" data-en="Assignee">담당자</span></label><input type="text" class="form-input" id="editAssignee"></div><div class="form-group"><label class="form-label"><span data-ko="상태" data-en="Status">상태</span></label><select class="form-select" id="editStatus"></select></div></div><div class="modal-footer"><button class="btn btn-danger" id="deleteTaskBtn" style="flex:1"><span data-ko="삭제" data-en="Delete">삭제</span></button><button class="btn btn-primary" id="saveTaskBtn" style="flex:2"><span data-ko="저장" data-en="Save">저장</span></button></div></div></div>
+
+  <div class="modal-overlay" id="addColumnModal"><div class="modal-sheet"><div class="modal-header"><span class="modal-title"><span data-ko="새 리스트" data-en="New List">새 리스트</span></span><button class="modal-close" id="addColumnClose"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="form-group"><label class="form-label"><span data-ko="이름" data-en="Name">이름</span></label><input type="text" class="form-input" id="newColumnName" data-ko-placeholder="리스트 이름" data-en-placeholder="List name" placeholder="리스트 이름"></div><div class="form-group"><label class="form-label"><span data-ko="색상" data-en="Color">색상</span></label><div class="color-options" id="columnColors"><span class="color-dot active" data-color="#FEE500" style="background:#FEE500"></span><span class="color-dot" data-color="#007AFF" style="background:#007AFF"></span><span class="color-dot" data-color="#34C759" style="background:#34C759"></span><span class="color-dot" data-color="#FF3B30" style="background:#FF3B30"></span><span class="color-dot" data-color="#AF52DE" style="background:#AF52DE"></span><span class="color-dot" data-color="#FF9500" style="background:#FF9500"></span></div></div></div><div class="modal-footer"><button class="btn btn-primary" id="addColumnConfirm" style="width:100%"><span data-ko="추가" data-en="Add">추가</span></button></div></div></div>
+
+  <div class="modal-overlay" id="settingsModal"><div class="modal-sheet"><div class="modal-header"><span class="modal-title"><span data-ko="설정" data-en="Settings">설정</span></span><button class="modal-close" id="settingsClose"><i class="fas fa-times"></i></button></div><div class="modal-body">
+    <div class="settings-section"><h4><span data-ko="계정" data-en="Account">계정</span></h4><div style="display:flex;gap:6px"><button class="btn" id="logoutBtn" style="background:var(--bg-tertiary);color:#FF3B30"><i class="fas fa-sign-out-alt"></i> <span data-ko="로그아웃" data-en="Logout">로그아웃</span></button></div></div>
+    <div class="settings-section"><h4><span data-ko="테마" data-en="Theme">테마</span></h4><div style="display:flex;gap:6px"><button class="btn" id="lightModeBtn" style="background:var(--bg-tertiary)"><i class="fas fa-sun"></i> <span data-ko="라이트" data-en="Light">라이트</span></button><button class="btn" id="darkModeBtn" style="background:var(--bg-tertiary)"><i class="fas fa-moon"></i> <span data-ko="다크" data-en="Dark">다크</span></button></div></div>
+    <div class="settings-section"><h4><span data-ko="액센트 컬러" data-en="Accent">액센트 컬러</span></h4><div class="color-options" id="accentColors"><span class="color-dot active" data-color="#FEE500" style="background:#FEE500"></span><span class="color-dot" data-color="#007AFF" style="background:#007AFF"></span><span class="color-dot" data-color="#34C759" style="background:#34C759"></span><span class="color-dot" data-color="#FF3B30" style="background:#FF3B30"></span><span class="color-dot" data-color="#AF52DE" style="background:#AF52DE"></span><span class="color-dot" data-color="#FF9500" style="background:#FF9500"></span></div></div>
+    <div class="settings-section"><h4><span data-ko="언어" data-en="Language">언어</span></h4><button class="btn" id="langToggleBtn" style="background:var(--bg-tertiary)"><span data-ko="한국어 / English" data-en="한국어 / English">한국어 / English</span></button></div>
+    <div class="settings-section"><h4><span data-ko="공유" data-en="Share">공유</span></h4><button class="btn" id="shareToKakaoBtn" style="background:#FEE500;color:#000;width:100%"><i class="fas fa-comment"></i> <span data-ko="카카오톡으로 공유" data-en="Share to KakaoTalk">카카오톡으로 공유</span></button><button class="btn" id="generateShareLink" style="background:var(--bg-tertiary);width:100%;margin-top:6px"><i class="fas fa-link"></i> <span data-ko="공유 링크 생성" data-en="Generate Link">공유 링크 생성</span></button><div class="share-link-box" id="shareLinkBox" style="display:none"><input type="text" id="shareLinkInput" readonly><button class="btn btn-primary" id="copyShareLink"><i class="fas fa-copy"></i></button></div></div>
+    <div class="settings-section"><h4><span data-ko="개발자 옵션" data-en="Developer Options">개발자 옵션</span> <span class="dev-badge">DEV</span></h4><div class="dev-section"><div class="dev-info" id="devInfo"><span data-ko="WebRTC 피어 투 피어 동기화" data-en="WebRTC peer-to-peer sync">WebRTC 피어 투 피어 동기화</span></div><button class="btn" id="webrtcToggleBtn" style="background:var(--bg-hover);width:100%;margin-bottom:6px"><i class="fas fa-plug"></i> <span data-ko="WebRTC 연결 열기" data-en="Open WebRTC Connection">WebRTC 연결 열기</span></button><div id="webrtcPanel" style="display:none"><div style="display:flex;gap:6px;margin-bottom:6px"><input type="text" class="form-input" id="webrtcRoomCode" data-ko-placeholder="방 코드" data-en-placeholder="Room code" placeholder="방 코드" style="text-align:center;font-size:1rem;letter-spacing:3px"><button class="btn btn-primary" id="webrtcHostBtn" style="flex:1"><span data-ko="방 만들기" data-en="Host">방 만들기</span></button><button class="btn btn-primary" id="webrtcJoinBtn" style="flex:1"><span data-ko="참가" data-en="Join">참가</span></button></div><div style="text-align:center;font-size:0.7rem;color:var(--text-secondary);min-height:18px" id="webrtcStatus"></div></div></div></div>
+    <div class="settings-section"><h4><span data-ko="데이터" data-en="Data">데이터</span></h4><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" id="settingsExport" style="background:var(--bg-tertiary)"><i class="fas fa-download"></i> <span data-ko="내보내기" data-en="Export">내보내기</span></button><button class="btn" id="settingsImport" style="background:var(--bg-tertiary)"><i class="fas fa-upload"></i> <span data-ko="가져오기" data-en="Import">가져오기</span></button><button class="btn btn-danger" id="settingsReset"><i class="fas fa-trash-alt"></i> <span data-ko="초기화" data-en="Reset">초기화</span></button></div></div>
+  </div></div></div>
+
+  <div class="modal-overlay" id="profileModal"><div class="modal-sheet"><div class="modal-header"><span class="modal-title"><span data-ko="프로필" data-en="Profile">프로필</span></span><button class="modal-close" id="profileClose"><i class="fas fa-times"></i></button></div><div class="modal-body"><div class="profile-pic-section"><div class="profile-pic-large" id="profilePicLarge"><img id="profilePicImg" src="" alt="Profile" style="display:none"><span id="profilePicText">ME</span></div><div class="profile-pic-actions"><button class="btn" id="changePhotoBtn" style="background:var(--bg-tertiary)"><i class="fas fa-camera"></i> <span data-ko="변경" data-en="Change">변경</span></button><button class="btn btn-danger" id="removePhotoBtn"><i class="fas fa-times"></i> <span data-ko="제거" data-en="Remove">제거</span></button><input type="file" id="photoInput" accept="image/*" style="display:none"></div></div><div class="form-group"><label class="form-label"><span data-ko="이름" data-en="Name">이름</span></label><input type="text" class="form-input" id="profileName"></div><div class="form-group"><label class="form-label"><span data-ko="아이디" data-en="Username">아이디</span></label><input type="text" class="form-input" id="profileUsername" readonly style="opacity:0.6"></div></div><div class="modal-footer"><button class="btn btn-primary" id="saveProfileBtn" style="width:100%"><span data-ko="저장" data-en="Save">저장</span></button></div></div></div>
+
+  <div class="add-task-popup" id="addTaskPopup"><div class="add-task-sheet"><div class="sheet-handle"></div><div class="sheet-header"><span class="sheet-title" data-ko="새 작업" data-en="New Task">새 작업</span><button class="sheet-close" id="popupClose"><i class="fas fa-times"></i></button></div><div class="sheet-body"><input type="text" class="quick-add-input" id="quickTaskTitle" data-ko-placeholder="할 일 입력..." data-en-placeholder="Enter task..." placeholder="할 일 입력..."><select class="quick-add-select" id="quickTaskStatus"></select></div><div class="sheet-actions"><button class="btn" id="popupCancel" style="flex:1;background:var(--bg-tertiary)"><span data-ko="취소" data-en="Cancel">취소</span></button><button class="btn btn-primary" id="popupAdd" style="flex:2"><span data-ko="추가" data-en="Add">추가</span></button></div></div></div>
+
+  <div class="toast-notification" id="appToast"></div>
+
+  <script>
+(function(){
+  const STORAGE_KEY='kanban_v131a';
+  const USERS_KEY='kanban_users';
+  const DEFAULT_COLUMNS=[{id:'todo',name:{ko:'할 일',en:'To Do'},color:'#FEE500'},{id:'inprogress',name:{ko:'진행중',en:'In Progress'},color:'#007AFF'},{id:'done',name:{ko:'완료',en:'Done'},color:'#34C759'}];
+  let taskIdCounter=1,currentFilter='all',editingCard=null,currentLang='ko',isDarkMode=true,accentColor='#FEE500';
+  let profileData={name:'ME',photo:null},columns=JSON.parse(JSON.stringify(DEFAULT_COLUMNS)),selectedColumnColor='#FEE500';
+  let webrtcPeer=null,webrtcDataChannel=null;
+  let currentUser=null; // {id, username, name, photo, provider:'local'|'kakao'|'guest'}
+
+  const boardContainer=document.getElementById('boardContainer'),taskModal=document.getElementById('taskModal');
+  const addTaskPopup=document.getElementById('addTaskPopup'),settingsModal=document.getElementById('settingsModal');
+  const profileModal=document.getElementById('profileModal'),addColumnModal=document.getElementById('addColumnModal');
+  const searchOverlay=document.getElementById('searchOverlay'),toast=document.getElementById('appToast');
+  const loginScreen=document.getElementById('loginScreen'),kanbanApp=document.getElementById('kanbanApp');
+
+  const t=(k)=>{const tr={taskSaved:{ko:'저장됨',en:'Saved'},taskDeleted:{ko:'삭제됨',en:'Deleted'},taskAdded:{ko:'추가됨',en:'Added'},enterTitle:{ko:'제목을 입력하세요',en:'Enter title'},confirmDelete:{ko:'삭제하시겠습니까?',en:'Delete?'},confirmReset:{ko:'초기화하시겠습니까?',en:'Reset board?'},confirmDeleteColumn:{ko:'리스트를 삭제하시겠습니까?',en:'Delete list?'},boardReset:{ko:'초기화됨',en:'Reset'},noData:{ko:'데이터 없음',en:'No data'},importDone:{ko:'가져오기 완료',en:'Imported'},invalidFile:{ko:'잘못된 파일',en:'Invalid file'},profileSaved:{ko:'저장됨',en:'Saved'},photoRemoved:{ko:'제거됨',en:'Removed'},linkCopied:{ko:'복사됨',en:'Copied'},shareGenerated:{ko:'링크 생성됨',en:'Link generated'},columnAdded:{ko:'리스트 추가됨',en:'List added'},columnDeleted:{ko:'삭제됨',en:'Deleted'},enterColumnName:{ko:'이름을 입력하세요',en:'Enter name'},peerConnected:{ko:'피어 연결됨',en:'Peer connected'},peerDisconnected:{ko:'피어 연결 해제됨',en:'Peer disconnected'},peerWaiting:{ko:'방 코드 공유 후 참가 대기 중...',en:'Share room code and wait...'},peerConnecting:{ko:'연결 중...',en:'Connecting...'},loginFailed:{ko:'아이디 또는 비밀번호가 틀렸습니다',en:'Invalid username or password'},signupSuccess:{ko:'회원가입 완료! 로그인해주세요',en:'Account created! Please sign in'},userExists:{ko:'이미 존재하는 아이디입니다',en:'Username already exists'},guestLogin:{ko:'게스트로 로그인했습니다',en:'Logged in as guest'},kakaoLoginFailed:{ko:'카카오 로그인 실패',en:'Kakao login failed'},kakaoNotInit:{ko:'카카오 SDK가 초기화되지 않았습니다',en:'Kakao SDK not initialized'},loggedOut:{ko:'로그아웃되었습니다',en:'Logged out'}};return tr[k]?.[currentLang]||k;};
+
+  // Login System
+  function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY))||{}}catch(e){return{}}}
+  function saveUsers(users){localStorage.setItem(USERS_KEY,JSON.stringify(users))}
+  function hashPassword(pw){let hash=0;for(let i=0;i<pw.length;i++){const chr=pw.charCodeAt(i);hash=((hash<<5)-hash)+chr;hash|=0}return 'h_'+Math.abs(hash).toString(36)+'_'+btoa(pw).substring(0,8)}
+
+  function loginUser(user){
+    currentUser=user;profileData={name:user.name,photo:user.photo||null};
+    document.getElementById('kanbanApp').style.display='flex';
+    loginScreen.classList.add('hidden');
+    updateProfileUI();loadAllData();applyFilter('all');updateUILanguage();applyTheme();updateAccentColor(accentColor);updateStatusSelects();
+    showToast(`${user.name}${currentLang==='ko'?'님 환영합니다':' welcome'}`);
+  }
+
+  function logout(){
+    currentUser=null;profileData={name:'ME',photo:null};columns=JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
+    document.getElementById('kanbanApp').style.display='none';loginScreen.classList.remove('hidden');
+    updateProfileUI();updateLoginUI();showToast(t('loggedOut'));
+  }
+
+  function updateLoginUI(){
+    document.getElementById('signInEmail').placeholder=currentLang==='ko'?'아이디':'Username';
+    document.getElementById('signInPassword').placeholder=currentLang==='ko'?'비밀번호':'Password';
+    document.getElementById('signUpName').placeholder=currentLang==='ko'?'이름':'Name';
+    document.getElementById('signUpEmail').placeholder=currentLang==='ko'?'아이디':'Username';
+    document.getElementById('signUpPassword').placeholder=currentLang==='ko'?'비밀번호':'Password';
+    document.getElementById('loginSubtitle').textContent=currentLang==='ko'?'카카오톡 스타일 칸반보드':'KakaoTalk-style Kanban Board';
+    const isSignUp=document.getElementById('signUpForm').style.display!=='none';
+    document.getElementById('loginToggle').innerHTML=isSignUp?
+      (currentLang==='ko'?'이미 계정이 있으신가요? <b>로그인</b>':'Already have an account? <b>Sign In</b>'):
+      (currentLang==='ko'?'계정이 없으신가요? <b>회원가입</b>':'Don\'t have an account? <b>Sign Up</b>');
+    document.getElementById('signInForm').querySelector('button').textContent=currentLang==='ko'?'로그인':'Sign In';
+    document.getElementById('signUpForm').querySelector('button').textContent=currentLang==='ko'?'회원가입':'Sign Up';
+    document.getElementById('guestLoginBtn').innerHTML=`<i class="fas fa-user"></i> ${currentLang==='ko'?'게스트로 계속하기':'Continue as Guest'}`;
+  }
+
+  // Sign In
+  document.getElementById('signInForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const username=document.getElementById('signInEmail').value.trim();
+    const password=document.getElementById('signInPassword').value;
+    if(!username||!password)return;
+    const users=getUsers();const hashedPw=hashPassword(password);
+    if(users[username]&&users[username].password===hashedPw){
+      loginUser({id:username,name:users[username].name,photo:users[username].photo,provider:'local'});
+    }else{
+      document.getElementById('loginError').textContent=t('loginFailed');
+    }
+  });
+
+  // Sign Up
+  document.getElementById('signUpForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const name=document.getElementById('signUpName').value.trim();
+    const username=document.getElementById('signUpEmail').value.trim();
+    const password=document.getElementById('signUpPassword').value;
+    if(!name||!username||!password)return;
+    const users=getUsers();
+    if(users[username]){document.getElementById('loginError').textContent=t('userExists');return}
+    users[username]={name,password:hashPassword(password),photo:null,createdAt:Date.now()};
+    saveUsers(users);
+    document.getElementById('loginError').textContent='';
+    document.getElementById('signUpForm').style.display='none';
+    document.getElementById('signInForm').style.display='flex';
+    updateLoginUI();
+    showToast(t('signupSuccess'));
+  });
+
+  // Login toggle
+  document.getElementById('loginToggle').addEventListener('click',()=>{
+    const signIn=document.getElementById('signInForm'),signUp=document.getElementById('signUpForm');
+    const isSignUp=signUp.style.display!=='none';
+    signIn.style.display=isSignUp?'flex':'none';signUp.style.display=isSignUp?'none':'flex';
+    document.getElementById('loginError').textContent='';
+    updateLoginUI();
+  });
+
+  // Guest login
+  document.getElementById('guestLoginBtn').addEventListener('click',()=>{
+    const guestId='guest_'+Date.now();
+    loginUser({id:guestId,name:currentLang==='ko'?'게스트':'Guest',photo:null,provider:'guest'});
+    showToast(t('guestLogin'));
+  });
+
+  // Kakao login
+  function initKakao(){try{if(window.Kakao&&!Kakao.isInitialized())Kakao.init('YOUR_KAKAO_APP_KEY')}catch(e){}}
+  document.getElementById('kakaoLoginBtn').addEventListener('click',()=>{
+    if(!window.Kakao||!Kakao.isInitialized()){initKakao();}
+    if(!window.Kakao||!Kakao.isInitialized()){showToast(t('kakaoNotInit'));return}
+    Kakao.Auth.login({
+      success:function(authObj){
+        Kakao.API.request({url:'/v2/user/me'}).then(function(res){
+          const kakaoId='kakao_'+res.id;
+          const name=res.properties?.nickname||'User';
+          const photo=res.properties?.profile_image||null;
+          loginUser({id:kakaoId,name,photo,provider:'kakao'});
+        }).catch(function(){showToast(t('kakaoLoginFailed'))});
+      },
+      fail:function(){showToast(t('kakaoLoginFailed'))}
+    });
+  });
+
+  // Logout
+  document.getElementById('logoutBtn').addEventListener('click',logout);
+
+  // Rest of the app functions
+  function updateUILanguage(){
+    document.querySelectorAll('[data-ko][data-en]').forEach(el=>{if(el.tagName==='OPTION'||el.classList.contains('btn-text')||!el.closest('.btn'))el.textContent=el.getAttribute(`data-${currentLang}`)});
+    document.querySelectorAll('[data-ko-placeholder][data-en-placeholder]').forEach(el=>el.placeholder=el.getAttribute(`data-${currentLang}-placeholder`));
+    updateColumnNames();updateFilterTabs();updateStatusSelects();updateLoginUI();
+  }
+  function updateColumnNames(){document.querySelectorAll('.column').forEach(col=>{const cd=columns.find(c=>c.id===col.dataset.status);if(cd){const n=col.querySelector('.column-name');if(n)n.textContent=cd.name[currentLang]}})}
+  function updateFilterTabs(){
+    const tc=document.getElementById('viewTabs');tc.querySelectorAll('.view-tab').forEach(t=>{const f=t.dataset.filter;if(f!=='all'&&!DEFAULT_COLUMNS.find(c=>c.id===f))t.remove()});
+    columns.forEach(col=>{if(!DEFAULT_COLUMNS.find(c=>c.id===col.id)&&!tc.querySelector(`[data-filter="${col.id}"]`)){const tab=document.createElement('button');tab.className='view-tab';tab.dataset.filter=col.id;tab.innerHTML=`${col.name[currentLang]} <span class="count">0</span>`;tc.appendChild(tab)}});
+  }
+  function updateStatusSelects(){[document.getElementById('editStatus'),document.getElementById('quickTaskStatus')].forEach(sel=>{if(!sel)return;const v=sel.value;sel.innerHTML=columns.map(c=>`<option value="${c.id}">${c.name[currentLang]}</option>`).join('');if(columns.find(c=>c.id===v))sel.value=v})}
+  function updateAccentColor(c){accentColor=c;document.documentElement.style.setProperty('--accent-color',c);document.querySelectorAll('#accentColors .color-dot').forEach(d=>d.classList.toggle('active',d.dataset.color===c));saveAllData()}
+  function applyTheme(){document.body.classList.toggle('dark-mode',isDarkMode);document.querySelector('meta[name="theme-color"]').content=isDarkMode?'#000000':'#ffffff';saveAllData()}
+  function updateProfileUI(){
+    const ha=document.getElementById('headerAvatar'),hat=document.getElementById('headerAvatarText'),pi=document.getElementById('profilePicImg'),pt=document.getElementById('profilePicText');
+    if(profileData.photo){ha.src=profileData.photo;ha.style.display='block';hat.style.display='none';pi.src=profileData.photo;pi.style.display='block';pt.style.display='none'}
+    else{ha.style.display='none';hat.style.display='block';hat.textContent=profileData.name.charAt(0).toUpperCase();pi.style.display='none';pt.style.display='block';pt.textContent=profileData.name.charAt(0).toUpperCase()}
+    document.getElementById('profileName').value=profileData.name;
+    if(currentUser)document.getElementById('profileUsername').value=currentUser.id.replace('guest_','Guest-').replace('kakao_','Kakao-');
+  }
+  function showToast(msg,undoAction=null){
+    toast.innerHTML=msg;if(undoAction){const b=document.createElement('button');b.className='toast-undo';b.textContent=currentLang==='ko'?'실행 취소':'Undo';b.addEventListener('click',()=>{undoAction();toast.classList.remove('show')});toast.appendChild(b)}
+    toast.classList.add('show');clearTimeout(toast._hideTimer);toast._hideTimer=setTimeout(()=>toast.classList.remove('show'),undoAction?4000:1800);
+  }
+  function getCardTitle(card){const t=card.querySelector('.card-title');if(!t)return'';const c=t.cloneNode(true);const i=c.querySelector('i');if(i)i.remove();return c.textContent.trim()}
+  function updateColumnCounts(){
+    columns.forEach(col=>{const ce=document.querySelector(`.column[data-status="${col.id}"]`);if(ce){const cnt=ce.querySelectorAll('.task-card').length;const cs=ce.querySelector('.column-count');if(cs)cs.textContent=cnt;const em=ce.querySelector('.empty-column-message');if(em)em.style.display=cnt===0?'block':'none'}});
+    const total=document.querySelectorAll('.task-card').length;const ac=document.querySelector('[data-filter="all"] .count');if(ac)ac.textContent=total;
+    columns.forEach(col=>{const tc=document.querySelector(`[data-filter="${col.id}"] .count`);if(tc)tc.textContent=document.querySelectorAll(`.column[data-status="${col.id}"] .task-card`).length});
+  }
+  function applyFilter(filter){currentFilter=filter;document.querySelectorAll('.task-card').forEach(c=>c.classList.toggle('hidden',filter!=='all'&&c.dataset.status!==filter))}
+  function moveCard(card,newStatus){
+    const tl=document.querySelector(`.column[data-status="${newStatus}"] .card-list`);if(!tl||!card)return;
+    card.dataset.status=newStatus;updateCardMoveButtons(card);
+    const label=card.querySelector('.label');if(label){const cd=columns.find(c=>c.id===newStatus);label.className='label '+(cd&&cd.id==='done'?'done':'feature');label.textContent=cd&&cd.id==='done'?(currentLang==='ko'?'완료':'Done'):(currentLang==='ko'?'기능':'Feature')}
+    tl.appendChild(card);updateColumnCounts();saveAllData();applyFilter(currentFilter);syncToPeer();
+  }
+  function updateCardMoveButtons(card){
+    const ar=card.querySelector('.card-actions-row');if(!ar)return;const cs=card.dataset.status,ci=columns.findIndex(c=>c.id===cs);
+    ar.innerHTML=columns.filter(c=>c.id!==cs).map(c=>{const arrow=columns.findIndex(col=>col.id===c.id)>ci?'→':'←';return `<button class="card-move-btn" data-move="${c.id}">${arrow} ${c.name[currentLang]}</button>`}).join('');
+    ar.querySelectorAll('.card-move-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();moveCard(card,b.dataset.move)}));
+  }
+  function createCardElement(title,status,desc='',assignee='',dateStr=null){
+    if(!dateStr){const d=new Date();dateStr=`${d.getMonth()+1}/${d.getDate()}`}if(!assignee)assignee=profileData.name||'ME';
+    const id=taskIdCounter++;const card=document.createElement('div');card.className='task-card';card.dataset.status=status;card.dataset.id=id;card.draggable=true;
+    const cd=columns.find(c=>c.id===status);const labelCls=cd&&cd.id==='done'?'done':'feature';const labelTxt=cd&&cd.id==='done'?(currentLang==='ko'?'완료':'Done'):(currentLang==='ko'?'기능':'Feature');
+    const av=profileData.photo?`<img src="${profileData.photo}" alt="${assignee}">`:assignee.charAt(0).toUpperCase();
+    card.innerHTML=`<div class="card-labels"><span class="label ${labelCls}">${labelTxt}</span></div><div class="card-title"><i class="far fa-sticky-note"></i> ${escapeHTML(title)}</div><div class="card-description">${escapeHTML(desc||(currentLang==='ko'?'설명 없음':'No description'))}</div><div class="card-meta"><div class="card-assignee"><span class="card-assignee-avatar">${av}</span> ${escapeHTML(assignee)}</div><div class="card-date"><i class="far fa-calendar-alt"></i> ${dateStr}</div></div><div class="card-actions-row"></div>`;
+    updateCardMoveButtons(card);return card;
+  }
+  function escapeHTML(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+  function attachCardEvents(card){
+    card.addEventListener('click',e=>{if(!e.target.closest('.card-move-btn'))openEditModal(card)});
+    card.addEventListener('dragstart',e=>{card.classList.add('dragging');e.dataTransfer.setData('text/plain',card.dataset.id)});
+    card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+  }
+  function openEditModal(card){editingCard=card;document.getElementById('modalTitle').textContent=currentLang==='ko'?'작업 상세':'Task Details';document.getElementById('editTitle').value=getCardTitle(card);document.getElementById('editDesc').value=card.querySelector('.card-description')?.textContent||'';document.getElementById('editAssignee').value=card.querySelector('.card-assignee')?.textContent.trim()||profileData.name;updateStatusSelects();document.getElementById('editStatus').value=card.dataset.status;taskModal.classList.add('active');document.getElementById('editTitle').focus()}
+  function closeEditModal(){taskModal.classList.remove('active');editingCard=null}
+  function saveTaskChanges(){
+    if(!editingCard)return;const title=document.getElementById('editTitle').value.trim();if(!title){showToast(t('enterTitle'));return}
+    const desc=document.getElementById('editDesc').value.trim(),assignee=document.getElementById('editAssignee').value.trim()||profileData.name,newStatus=document.getElementById('editStatus').value;
+    editingCard.querySelector('.card-title').innerHTML=`<i class="far fa-sticky-note"></i> ${escapeHTML(title)}`;
+    editingCard.querySelector('.card-description').textContent=desc||(currentLang==='ko'?'설명 없음':'No description');
+    const av=profileData.photo?`<img src="${profileData.photo}" alt="${assignee}">`:assignee.charAt(0).toUpperCase();
+    const ae=editingCard.querySelector('.card-assignee');if(ae)ae.innerHTML=`<span class="card-assignee-avatar">${av}</span> ${escapeHTML(assignee)}`;
+    if(editingCard.dataset.status!==newStatus)moveCard(editingCard,newStatus);
+    updateColumnCounts();saveAllData();closeEditModal();showToast(t('taskSaved'));syncToPeer();
+  }
+  function deleteTask(){
+    if(!editingCard||!confirm(t('confirmDelete')))return;
+    const card=editingCard,parent=card.parentNode,status=card.dataset.status,title=getCardTitle(card),desc=card.querySelector('.card-description')?.textContent||'',assignee=card.querySelector('.card-assignee')?.textContent.trim()||'';
+    card.remove();updateColumnCounts();saveAllData();closeEditModal();
+    showToast(t('taskDeleted'),()=>{const c=createCardElement(title,status,desc,assignee);c.dataset.id=card.dataset.id;parent.appendChild(c);attachCardEvents(c);updateColumnCounts();saveAllData();applyFilter(currentFilter);showToast(currentLang==='ko'?'복구됨':'Restored');syncToPeer()});
+    syncToPeer();
+  }
+  function openAddPopup(preset=null){quickTaskTitle.value='';updateStatusSelects();if(preset&&columns.find(c=>c.id===preset))quickTaskStatus.value=preset;addTaskPopup.classList.add('active');setTimeout(()=>quickTaskTitle.focus(),100)}
+  function closeAddPopup(){addTaskPopup.classList.remove('active')}
+  function addTaskFromPopup(){
+    const title=quickTaskTitle.value.trim();if(!title){showToast(t('enterTitle'));return}
+    const status=quickTaskStatus.value,card=createCardElement(title,status);
+    const list=document.querySelector(`.column[data-status="${status}"] .card-list`);
+    if(list){list.appendChild(card);attachCardEvents(card);updateColumnCounts();if(currentFilter!=='all'&&currentFilter!==status)card.classList.add('hidden');saveAllData();showToast(t('taskAdded'))}
+    closeAddPopup();syncToPeer();
+  }
+  function renderAllColumns(){
+    boardContainer.innerHTML='';
+    columns.forEach(col=>{const el=document.createElement('div');el.className='column';el.dataset.status=col.id;el.innerHTML=`<div class="column-header"><div class="column-title-group"><span class="column-dot" style="background:${col.color}"></span><span class="column-name">${col.name[currentLang]}</span><span class="column-count">0</span></div><div class="column-actions"><button class="column-action-btn column-add-btn" data-add-to="${col.id}"><i class="fas fa-plus"></i></button>${!DEFAULT_COLUMNS.find(c=>c.id===col.id)?`<button class="column-action-btn delete-column" data-delete="${col.id}"><i class="fas fa-trash-alt"></i></button>`:''}</div></div><div class="card-list"></div><div class="empty-column-message"><span data-ko="비어있음" data-en="Empty">비어있음</span></div>`;boardContainer.appendChild(el)});
+    const addBtn=document.createElement('button');addBtn.className='add-column-btn';addBtn.id='addColumnTrigger';addBtn.innerHTML=`<i class="fas fa-plus"></i> <span data-ko="리스트 추가" data-en="Add List">리스트 추가</span>`;boardContainer.appendChild(addBtn);
+    attachColumnEvents();updateUILanguage();
+  }
+  function attachColumnEvents(){
+    document.querySelectorAll('.column-add-btn').forEach(b=>b.addEventListener('click',()=>openAddPopup(b.dataset.addTo)));
+    document.querySelectorAll('.delete-column').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();deleteColumn(b.dataset.delete)}));
+    document.querySelectorAll('.column').forEach(col=>{col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('drag-over')});col.addEventListener('dragleave',()=>col.classList.remove('drag-over'));col.addEventListener('drop',e=>{e.preventDefault();col.classList.remove('drag-over');const dc=document.querySelector('.task-card.dragging');if(dc)moveCard(dc,col.dataset.status)})});
+    const at=document.getElementById('addColumnTrigger');if(at)at.addEventListener('click',()=>addColumnModal.classList.add('active'));
+  }
+  function addNewColumn(){
+    const name=document.getElementById('newColumnName').value.trim();if(!name){showToast(t('enterColumnName'));return}
+    columns.push({id:'col_'+Date.now(),name:{ko:name,en:name},color:selectedColumnColor});
+    renderAllColumns();updateFilterTabs();updateStatusSelects();saveAllData();addColumnModal.classList.remove('active');document.getElementById('newColumnName').value='';showToast(t('columnAdded'));
+  }
+  function deleteColumn(cid){if(!confirm(t('confirmDeleteColumn')))return;columns=columns.filter(c=>c.id!==cid);document.querySelectorAll(`.column[data-status="${cid}"] .task-card`).forEach(c=>c.remove());renderAllColumns();updateFilterTabs();updateStatusSelects();saveAllData();showToast(t('columnDeleted'))}
+
+  // Kakao Share
+  function shareToKakaoTalk(){
+    if(!window.Kakao||!Kakao.isInitialized()){try{initKakao()}catch(e){}}
+    if(!window.Kakao||!Kakao.isInitialized()){showToast(t('kakaoNotInit'));return}
+    const total=document.querySelectorAll('.task-card').length;const done=document.querySelectorAll('.task-card[data-status="done"]').length;
+    Kakao.Link.sendDefault({objectType:'feed',content:{title:`Kanban - ${profileData.name}`,description:`${total} tasks • ${done} done`,imageUrl:'https://via.placeholder.com/300x300/FEE500/000000?text=K',link:{mobileWebUrl:location.href,webUrl:location.href}},buttons:[{title:currentLang==='ko'?'보드 열기':'Open Board',link:{mobileWebUrl:location.href,webUrl:location.href}}]});
+  }
+
+  // WebRTC
+  function generateRoomCode(){return Math.random().toString(36).substring(2,8).toUpperCase()}
+  function toggleWebRTCPanel(){const p=document.getElementById('webrtcPanel');p.style.display=p.style.display==='none'?'block':'none'}
+  async function hostWebRTC(){
+    const statusEl=document.getElementById('webrtcStatus');const code=generateRoomCode();document.getElementById('webrtcRoomCode').value=code;
+    const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});webrtcPeer=pc;
+    const channel=pc.createDataChannel('kanban-sync');setupDataChannel(channel);
+    pc.onicecandidate=e=>{if(e.candidate){}};
+    const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+    window._pendingOffer=pc.localDescription;statusEl.textContent=t('peerWaiting');
+  }
+  async function joinWebRTC(){
+    const statusEl=document.getElementById('webrtcStatus');const code=document.getElementById('webrtcRoomCode').value.trim();if(!code)return;
+    if(!window._pendingOffer){statusEl.textContent=currentLang==='ko'?'호스트가 먼저 방을 만들어야 합니다':'Host must create room first';return}
+    const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});webrtcPeer=pc;
+    pc.ondatachannel=e=>setupDataChannel(e.channel);pc.onicecandidate=e=>{if(e.candidate){}};
+    statusEl.textContent=t('peerConnecting');await pc.setRemoteDescription(window._pendingOffer);
+    const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
+  }
+  function setupDataChannel(channel){
+    webrtcDataChannel=channel;
+    channel.onopen=()=>{document.getElementById('webrtcStatus').textContent=t('peerConnected');syncToPeer()};
+    channel.onmessage=e=>{try{const data=JSON.parse(e.data);if(data.type==='full-sync'){localStorage.setItem(STORAGE_KEY+'_'+currentUser.id,JSON.stringify(data.boardData));loadAllData()}}catch(ex){}}
+    channel.onclose=()=>{document.getElementById('webrtcStatus').textContent=t('peerDisconnected');webrtcDataChannel=null}
+  }
+  function syncToPeer(){
+    if(!webrtcDataChannel||webrtcDataChannel.readyState!=='open')return;
+    const data=localStorage.getItem(STORAGE_KEY+'_'+currentUser.id);if(data)webrtcDataChannel.send(JSON.stringify({type:'full-sync',boardData:JSON.parse(data)}));
+  }
+
+  // Storage (per-user)
+  function getUserStorageKey(){return currentUser?STORAGE_KEY+'_'+currentUser.id:STORAGE_KEY+'_guest'}
+  function saveAllData(){
+    if(!currentUser)return;
+    const tasks=[];document.querySelectorAll('.task-card').forEach(c=>{tasks.push({id:c.dataset.id,title:getCardTitle(c),desc:c.querySelector('.card-description')?.textContent||'',assignee:c.querySelector('.card-assignee')?.textContent.trim()||profileData.name,status:c.dataset.status,date:c.querySelector('.card-date')?.textContent.trim()||''})});
+    try{localStorage.setItem(getUserStorageKey(),JSON.stringify({tasks,nextId:taskIdCounter,lang:currentLang,isDarkMode,accentColor,columns}))}catch(e){}
+  }
+  function loadAllData(){
+    if(!currentUser)return;
+    const saved=localStorage.getItem(getUserStorageKey());if(!saved){renderAllColumns();updateColumnCounts();updateFilterTabs();updateStatusSelects();return}
+    try{const data=JSON.parse(saved);taskIdCounter=data.nextId||1;if(data.lang)currentLang=data.lang;if(data.isDarkMode!==undefined)isDarkMode=data.isDarkMode;if(data.accentColor)accentColor=data.accentColor;if(data.columns?.length)columns=data.columns;applyTheme();updateAccentColor(accentColor);renderAllColumns();updateFilterTabs();updateStatusSelects();updateUILanguage();
+    document.querySelectorAll('.task-card').forEach(c=>c.remove());
+    (data.tasks||[]).forEach(t=>{if(columns.find(c=>c.id===t.status)){const card=createCardElement(t.title,t.status,t.desc,t.assignee,t.date);card.dataset.id=t.id;const list=document.querySelector(`.column[data-status="${t.status}"] .card-list`);if(list){list.appendChild(card);attachCardEvents(card)}}});
+    taskIdCounter=Math.max(taskIdCounter,Math.max(...(data.tasks||[]).map(t=>parseInt(t.id)||0),0)+1);updateColumnCounts()}catch(e){renderAllColumns();updateColumnCounts()}
+  }
+  function exportBoard(){const d=localStorage.getItem(getUserStorageKey());if(!d)return showToast(t('noData'));const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([d],{type:'application/json'}));a.download='kanban_backup.json';a.click()}
+  function importBoard(){const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const data=JSON.parse(ev.target.result);if(data.tasks){localStorage.setItem(getUserStorageKey(),JSON.stringify(data));loadAllData();showToast(t('importDone'))}}catch(ex){showToast(t('invalidFile'))}};r.readAsText(f)};inp.click()}
+  function resetBoard(){if(!confirm(t('confirmReset')))return;localStorage.removeItem(getUserStorageKey());columns=JSON.parse(JSON.stringify(DEFAULT_COLUMNS));document.querySelectorAll('.task-card').forEach(c=>c.remove());taskIdCounter=1;renderAllColumns();updateFilterTabs();updateStatusSelects();updateColumnCounts();showToast(t('boardReset'))}
+  function generateShareLink(){const d=localStorage.getItem(getUserStorageKey());if(!d)return showToast(t('noData'));const link=`${location.origin}${location.pathname}?share=${btoa(encodeURIComponent(d))}`;document.getElementById('shareLinkInput').value=link;document.getElementById('shareLinkBox').style.display='flex';showToast(t('shareGenerated'))}
+  function loadSharedBoard(){const p=new URLSearchParams(location.search).get('share');if(!p)return;try{const data=JSON.parse(decodeURIComponent(atob(p)));if(data.tasks){localStorage.setItem(getUserStorageKey(),JSON.stringify(data));loadAllData()}}catch(e){}history.replaceState({},'',location.pathname)}
+
+  // Search
+  function openSearch(){searchOverlay.classList.add('active');document.getElementById('searchOverlayInput').focus();updateSearchResults('')}
+  function closeSearch(){searchOverlay.classList.remove('active');document.getElementById('searchOverlayInput').value='';document.getElementById('searchResults').innerHTML=`<div class="search-empty"><span data-ko="검색어를 입력하세요" data-en="Type to search">검색어를 입력하세요</span></div>`}
+  function updateSearchResults(term){
+    const sr=document.getElementById('searchResults');if(!term){sr.innerHTML=`<div class="search-empty"><span data-ko="검색어를 입력하세요" data-en="Type to search">검색어를 입력하세요</span></div>`;return}
+    const results=[];document.querySelectorAll('.task-card').forEach(c=>{const title=getCardTitle(c).toLowerCase(),desc=(c.querySelector('.card-description')?.textContent||'').toLowerCase();if(title.includes(term)||desc.includes(term))results.push(c)});
+    sr.innerHTML=results.length===0?`<div class="search-empty"><span data-ko="결과 없음" data-en="No results">결과 없음</span></div>`:results.map(c=>{const cd=columns.find(col=>col.id===c.dataset.status);return`<div class="search-result-item" data-card-id="${c.dataset.id}"><div class="search-result-title">${escapeHTML(getCardTitle(c))}</div><div class="search-result-meta">${cd?cd.name[currentLang]:''} • ${c.querySelector('.card-assignee')?.textContent.trim()||''}</div></div>`}).join('');
+    sr.querySelectorAll('.search-result-item').forEach(item=>item.addEventListener('click',()=>{const card=document.querySelector(`.task-card[data-id="${item.dataset.cardId}"]`);if(card){openEditModal(card);closeSearch()}}));
+  }
+
+  // Event bindings
+  document.getElementById('viewTabs').addEventListener('click',e=>{const tab=e.target.closest('.view-tab');if(!tab)return;document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');applyFilter(tab.dataset.filter)});
+  document.getElementById('modalClose').addEventListener('click',closeEditModal);taskModal.addEventListener('click',e=>{if(e.target===taskModal)closeEditModal()});
+  document.getElementById('saveTaskBtn').addEventListener('click',saveTaskChanges);document.getElementById('deleteTaskBtn').addEventListener('click',deleteTask);
+  document.getElementById('settingsBtn').addEventListener('click',()=>settingsModal.classList.add('active'));
+  document.getElementById('settingsClose').addEventListener('click',()=>settingsModal.classList.remove('active'));
+  settingsModal.addEventListener('click',e=>{if(e.target===settingsModal)settingsModal.classList.remove('active')});
+  document.getElementById('lightModeBtn').addEventListener('click',()=>{isDarkMode=false;applyTheme()});
+  document.getElementById('darkModeBtn').addEventListener('click',()=>{isDarkMode=true;applyTheme()});
+  document.getElementById('accentColors').addEventListener('click',e=>{const d=e.target.closest('.color-dot');if(d)updateAccentColor(d.dataset.color)});
+  document.getElementById('shareToKakaoBtn').addEventListener('click',shareToKakaoTalk);
+  document.getElementById('generateShareLink').addEventListener('click',generateShareLink);
+  document.getElementById('copyShareLink').addEventListener('click',()=>{navigator.clipboard.writeText(document.getElementById('shareLinkInput').value);showToast(t('linkCopied'))});
+  document.getElementById('langToggleBtn').addEventListener('click',()=>{currentLang=currentLang==='ko'?'en':'ko';updateUILanguage();saveAllData()});
+  document.getElementById('settingsExport').addEventListener('click',exportBoard);
+  document.getElementById('settingsImport').addEventListener('click',importBoard);
+  document.getElementById('settingsReset').addEventListener('click',resetBoard);
+  document.getElementById('webrtcToggleBtn').addEventListener('click',toggleWebRTCPanel);
+  document.getElementById('webrtcHostBtn').addEventListener('click',hostWebRTC);
+  document.getElementById('webrtcJoinBtn').addEventListener('click',joinWebRTC);
+  document.getElementById('profileBtn').addEventListener('click',()=>{updateProfileUI();profileModal.classList.add('active')});
+  document.getElementById('profileClose').addEventListener('click',()=>profileModal.classList.remove('active'));
+  profileModal.addEventListener('click',e=>{if(e.target===profileModal)profileModal.classList.remove('active')});
+  document.getElementById('saveProfileBtn').addEventListener('click',()=>{profileData.name=document.getElementById('profileName').value.trim()||'ME';updateProfileUI();saveAllData();profileModal.classList.remove('active');showToast(t('profileSaved'))});
+  document.getElementById('changePhotoBtn').addEventListener('click',()=>document.getElementById('photoInput').click());
+  document.getElementById('removePhotoBtn').addEventListener('click',()=>{profileData.photo=null;updateProfileUI();saveAllData();showToast(t('photoRemoved'))});
+  document.getElementById('photoInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{profileData.photo=ev.target.result;updateProfileUI();saveAllData();showToast(t('profileSaved'))};r.readAsDataURL(f)});
+  document.getElementById('addColumnClose').addEventListener('click',()=>addColumnModal.classList.remove('active'));
+  addColumnModal.addEventListener('click',e=>{if(e.target===addColumnModal)addColumnModal.classList.remove('active')});
+  document.getElementById('addColumnConfirm').addEventListener('click',addNewColumn);
+  document.getElementById('columnColors').addEventListener('click',e=>{const d=e.target.closest('.color-dot');if(!d)return;document.querySelectorAll('#columnColors .color-dot').forEach(dd=>dd.classList.remove('active'));d.classList.add('active');selectedColumnColor=d.dataset.color});
+  document.getElementById('newColumnName').addEventListener('keypress',e=>{if(e.key==='Enter')addNewColumn()});
+  document.getElementById('notificationsBtn').addEventListener('click',()=>showToast(currentLang==='ko'?'알림 없음':'No notifications'));
+  document.getElementById('shareKakaoHeaderBtn').addEventListener('click',shareToKakaoTalk);
+  document.getElementById('popupClose').addEventListener('click',closeAddPopup);document.getElementById('popupCancel').addEventListener('click',closeAddPopup);
+  addTaskPopup.addEventListener('click',e=>{if(e.target===addTaskPopup)closeAddPopup()});
+  document.getElementById('popupAdd').addEventListener('click',addTaskFromPopup);
+  document.getElementById('quickTaskTitle').addEventListener('keypress',e=>{if(e.key==='Enter')addTaskFromPopup()});
+  document.getElementById('globalAddBtn').addEventListener('click',()=>openAddPopup());
+  document.getElementById('searchBtn').addEventListener('click',openSearch);
+  document.getElementById('searchBack').addEventListener('click',closeSearch);
+  document.getElementById('searchOverlayInput').addEventListener('input',e=>updateSearchResults(e.target.value.toLowerCase()));
+  document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();openSearch()}if((e.ctrlKey||e.metaKey)&&e.key==='n'){e.preventDefault();openAddPopup()}if(e.key==='Escape'){if(searchOverlay.classList.contains('active'))closeSearch();else if(addTaskPopup.classList.contains('active'))closeAddPopup();else if(taskModal.classList.contains('active'))closeEditModal();else{settingsModal.classList.remove('active');profileModal.classList.remove('active');addColumnModal.classList.remove('active')}}});
+
+  // Init
+  initKakao();
+  updateLoginUI();
+  loadSharedBoard();
+})();
+</script>
+</body>
+</html>
