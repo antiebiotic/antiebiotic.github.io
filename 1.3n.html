@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>메모 • 카카오톡</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      transition: background 0.3s, color 0.3s;
+    }
+    .app {
+      width: 100%; height: 100%;
+      background: var(--surface);
+      display: flex; flex-direction: column;
+      transition: background 0.3s;
+      position: relative;
+    }
+
+    :root {
+      --bg: #f7f8fc; --surface: #ffffff; --text: #191919; --text-secondary: #b0b8c2;
+      --border: #f2f2f5; --input-bg: #f4f5f9; --input-focus-bg: #ffffff;
+      --highlight: #fffbe6; --accent: #fae100; --accent-text: #3c1e1e;
+      --danger: #ff6b6b; --ghost: #8e8e93; --save-dot: #d1d5db;
+      --delete-btn: #c4c9d1; --empty-color: #c4c9d1; --overlay: rgba(0,0,0,0.4);
+      --icon-color: #8e8e93;
+    }
+    body.oled {
+      --bg: #000000; --surface: #000000; --text: #ffffff; --text-secondary: #8e8e93;
+      --border: #1c1c1e; --input-bg: #1c1c1e; --input-focus-bg: #2c2c2e;
+      --highlight: #1a1a00; --accent-text: #000000; --danger: #ff453a;
+      --ghost: #8e8e93; --save-dot: #3a3a3c; --delete-btn: #3a3a3c; --empty-color: #636366;
+      --overlay: rgba(0,0,0,0.7); --icon-color: #8e8e93;
+    }
+
+    /* Login / Reference Screen */
+    .ref-screen {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 40px 24px; gap: 24px;
+      background: var(--surface);
+    }
+    .ref-screen h2 { font-size: 20px; font-weight: 700; color: var(--text); text-align: center; }
+    .ref-screen p { font-size: 14px; color: var(--text-secondary); text-align: center; line-height: 1.5; }
+    .ref-input-group { display: flex; gap: 8px; width: 100%; max-width: 280px; }
+    .ref-input {
+      flex: 1; padding: 14px 16px; border-radius: 16px; border: 1.5px solid var(--border);
+      background: var(--input-bg); font-size: 16px; font-family: inherit; color: var(--text);
+      text-align: center; letter-spacing: 4px; font-weight: 600; outline: none;
+      transition: border-color 0.2s; text-transform: uppercase;
+    }
+    .ref-input:focus { border-color: var(--accent); background: var(--input-focus-bg); }
+    .ref-input::placeholder { letter-spacing: 1px; font-weight: 400; color: var(--text-secondary); }
+    .ref-code-display {
+      background: var(--highlight); padding: 16px 24px; border-radius: 20px;
+      text-align: center; border: 1.5px solid var(--accent);
+    }
+    .ref-code-display .label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+    .ref-code-display .code {
+      font-size: 28px; font-weight: 800; color: var(--accent-text);
+      letter-spacing: 6px; font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+    }
+    .ref-actions { display: flex; gap: 8px; width: 100%; max-width: 280px; }
+    .ref-actions .btn { flex: 1; }
+
+    /* Main App (hidden until ref entered) */
+    .main-app { flex: 1; display: none; flex-direction: column; }
+    .main-app.active { display: flex; }
+
+    .header {
+      padding: 20px 20px 12px; display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .header h1 { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+    .header-right { display: flex; align-items: center; gap: 14px; }
+    .save-indicator { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 5px; }
+    .save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--save-dot); transition: background 0.2s; }
+    .save-dot.saved { background: var(--accent); }
+    .icon-btn {
+      background: none; border: none; padding: 6px; border-radius: 50%;
+      cursor: pointer; color: var(--icon-color); display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .icon-btn:active { background: var(--border); color: var(--text); }
+    .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .ref-badge {
+      font-size: 10px; background: var(--highlight); color: var(--accent-text);
+      padding: 3px 8px; border-radius: 10px; font-weight: 600; letter-spacing: 1px;
+      font-family: 'SF Mono', 'Menlo', 'Consolas', monospace; cursor: pointer;
+    }
+    .ref-badge:active { opacity: 0.7; }
+
+    .list { flex: 1; overflow-y: auto; padding: 0 16px; background: var(--surface); }
+    .note-row {
+      display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background 0.15s;
+    }
+    .note-row:active { background: var(--highlight); }
+    .note-content { flex: 1; min-width: 0; }
+    .note-text { font-size: 15px; color: var(--text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+    .note-time { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .delete-btn {
+      background: none; border: none; padding: 8px; margin-left: 8px; border-radius: 12px;
+      cursor: pointer; color: var(--delete-btn); display: flex; align-items: center;
+    }
+    .delete-btn:active { color: var(--danger); }
+    .delete-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+    .empty-state {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: var(--empty-color); gap: 10px; font-size: 15px; height: 100%;
+    }
+    .empty-icon svg { width: 44px; height: 44px; stroke: var(--empty-color); fill: none; stroke-width: 1.5; stroke-linecap: round; }
+
+    .new-note-btn {
+      margin: 8px 16px 20px; padding: 14px; border: 1.5px dashed var(--border); border-radius: 16px;
+      text-align: center; color: var(--text-secondary); font-size: 15px; cursor: pointer; background: transparent;
+    }
+
+    /* Detail View */
+    .detail-view {
+      flex: 1; display: flex; flex-direction: column; background: var(--surface);
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      transform: translateX(100%); transition: transform 0.25s ease-out; z-index: 10;
+    }
+    .detail-view.open { transform: translateX(0); }
+    .detail-header {
+      padding: 16px 16px 12px; display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .back-btn { background: none; border: none; cursor: pointer; color: var(--accent); padding: 4px 8px; border-radius: 12px; display: flex; }
+    .back-btn svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .detail-title { font-size: 16px; font-weight: 600; color: var(--text); flex: 1; }
+    .detail-actions { display: flex; gap: 8px; }
+    .detail-editor { flex: 1; padding: 16px; }
+    .detail-textarea {
+      width: 100%; height: 100%; background: transparent; border: none; outline: none;
+      font-size: 16px; font-family: inherit; color: var(--text); resize: none; line-height: 1.6;
+    }
+    .detail-textarea::placeholder { color: var(--text-secondary); }
+    .detail-footer {
+      padding: 12px 16px 20px; border-top: 1px solid var(--border); flex-shrink: 0;
+      display: flex; gap: 8px; align-items: center;
+    }
+    .btn {
+      border: none; border-radius: 22px; padding: 12px 20px; font-weight: 700; font-size: 14px;
+      cursor: pointer; background: var(--accent); color: var(--accent-text); white-space: nowrap;
+      letter-spacing: -0.3px; transition: opacity 0.15s;
+    }
+    .btn:active { opacity: 0.85; }
+    .btn.ghost { background: transparent; color: var(--ghost); font-weight: 500; }
+    .btn.outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+
+    /* Settings Modal */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--overlay); z-index: 100; display: flex;
+      align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: var(--surface); border-radius: 24px; padding: 24px; width: 90%; max-width: 360px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative;
+    }
+    .modal h2 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
+    .setting-row {
+      display: flex; align-items: center; justify-content: space-between; padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .setting-label { font-size: 15px; color: var(--text); }
+    .toggle-group { display: flex; gap: 4px; }
+    .toggle-btn {
+      padding: 8px 16px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: transparent; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+    .toggle-btn.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+    .json-actions { display: flex; gap: 8px; margin-top: 16px; }
+    .json-actions .btn { flex: 1; text-align: center; font-size: 13px; padding: 10px; }
+    .modal-close {
+      position: absolute; top: 14px; right: 14px; background: none; border: none;
+      cursor: pointer; color: var(--icon-color); display: flex; padding: 6px; border-radius: 50%;
+    }
+    .modal-close:active { background: var(--border); }
+    .modal-close svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .ref-display-inline {
+      background: var(--highlight); border-radius: 12px; padding: 10px 14px; margin-top: 12px;
+      text-align: center; font-size: 13px; color: var(--accent-text);
+    }
+    .ref-display-inline .code { font-weight: 800; letter-spacing: 3px; font-family: 'SF Mono', 'Menlo', monospace; }
+    .credit {
+      text-align: center; font-size: 11px; color: var(--text-secondary);
+      margin-top: 16px; opacity: 0.5; font-weight: 300;
+    }
+    .toast {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+      background: var(--text); color: var(--surface); padding: 10px 24px; border-radius: 20px;
+      font-size: 13px; font-weight: 600; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- Reference Code Screen -->
+  <div class="ref-screen" id="refScreen">
+    <div style="font-size:48px;opacity:0.6;">
+      <svg viewBox="0 0 24 24" style="width:48px;height:48px;stroke:var(--text-secondary);fill:none;stroke-width:1.5;stroke-linecap:round;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h2 id="refTitle">참조 코드 입력</h2>
+    <p id="refDesc">8자리 코드로 어디서나 메모를 불러옵니다</p>
+    <div class="ref-input-group">
+      <input class="ref-input" id="refInput" placeholder="코드 입력" maxlength="8" autocomplete="off">
+    </div>
+    <div class="ref-actions">
+      <button class="btn" id="refLoadBtn">불러오기</button>
+      <button class="btn outline" id="refNewBtn">새로 만들기</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-secondary);" id="refHint">코드가 없으면 '새로 만들기'를 눌러주세요</p>
+  </div>
+
+  <!-- Main App -->
+  <div class="main-app" id="mainApp">
+    <header class="header">
+      <h1 id="appTitle">메모</h1>
+      <div class="header-right">
+        <span class="ref-badge" id="refBadge" title="내 참조 코드"></span>
+        <div class="save-indicator">
+          <span class="save-dot saved" id="saveDot"></span>
+          <span id="saveLabel">저장됨</span>
+        </div>
+        <button class="icon-btn" id="settingsBtn" title="설정">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="list" id="noteList"></div>
+    <button class="new-note-btn" id="newNoteBtn">+ <span id="newNoteLabel">새 메모</span></button>
+  </div>
+
+  <!-- Detail View -->
+  <div class="detail-view" id="detailView">
+    <div class="detail-header">
+      <button class="back-btn" id="backBtn"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <span class="detail-title" id="detailTitle">메모</span>
+      <div class="detail-actions">
+        <button class="icon-btn" id="detailShareBtn" title="공유"><svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></button>
+        <button class="icon-btn" id="detailDeleteBtn" title="삭제"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+      </div>
+    </div>
+    <div class="detail-editor"><textarea class="detail-textarea" id="detailTextarea" placeholder="내용을 입력하세요..."></textarea></div>
+    <div class="detail-footer">
+      <span style="font-size:12px;color:var(--text-secondary);" id="detailTime"></span>
+      <span style="flex:1;"></span>
+      <button class="btn" id="detailSaveBtn">저장</button>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsOverlay">
+    <div class="modal">
+      <button class="modal-close" id="closeSettings"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <h2 id="settingsTitle">설정</h2>
+      <div class="setting-row">
+        <span class="setting-label" id="themeLabel">테마</span>
+        <div class="toggle-group" id="themeToggle">
+          <button class="toggle-btn active" data-theme="light">라이트</button>
+          <button class="toggle-btn" data-theme="oled">OLED</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label" id="langLabel">언어</span>
+        <div class="toggle-group" id="langToggle">
+          <button class="toggle-btn active" data-lang="ko">한국어</button>
+          <button class="toggle-btn" data-lang="en">English</button>
+        </div>
+      </div>
+      <div class="ref-display-inline">
+        <span id="refLabel">내 참조 코드</span>: <span class="code" id="refCodeDisplay"></span>
+      </div>
+      <div class="json-actions">
+        <button class="btn outline" id="exportBtn">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="exportLabel">내보내기</span>
+        </button>
+        <button class="btn outline" id="importBtn">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;vertical-align:middle;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 7 12 2 17 7"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          <span id="importLabel">가져오기</span>
+        </button>
+      </div>
+      <button class="btn outline" id="logoutBtn" style="width:100%;margin-top:8px;color:var(--danger);border-color:var(--danger);">로그아웃</button>
+      <div class="credit">Made by Antibiotic in NYC</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <input type="file" id="importFile" accept=".json" style="display:none;">
+</div>
+
+<script>
+(() => {
+  const STORAGE_PREFIX = 'kakao_notes_ref_';
+  const SETTINGS_KEY = 'kakao_note_settings';
+  const CURRENT_REF_KEY = 'kakao_current_ref';
+
+  const refScreen = document.getElementById('refScreen');
+  const mainApp = document.getElementById('mainApp');
+  const refInput = document.getElementById('refInput');
+  const refLoadBtn = document.getElementById('refLoadBtn');
+  const refNewBtn = document.getElementById('refNewBtn');
+  const refBadge = document.getElementById('refBadge');
+  const refCodeDisplay = document.getElementById('refCodeDisplay');
+  const noteList = document.getElementById('noteList');
+  const saveDot = document.getElementById('saveDot');
+  const saveLabel = document.getElementById('saveLabel');
+  const newNoteBtn = document.getElementById('newNoteBtn');
+  const detailView = document.getElementById('detailView');
+  const detailTextarea = document.getElementById('detailTextarea');
+  const detailTime = document.getElementById('detailTime');
+  const detailSaveBtn = document.getElementById('detailSaveBtn');
+  const detailShareBtn = document.getElementById('detailShareBtn');
+  const detailDeleteBtn = document.getElementById('detailDeleteBtn');
+  const backBtn = document.getElementById('backBtn');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsOverlay = document.getElementById('settingsOverlay');
+  const closeSettings = document.getElementById('closeSettings');
+  const exportBtn = document.getElementById('exportBtn');
+  const importBtn = document.getElementById('importBtn');
+  const importFile = document.getElementById('importFile');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const toast = document.getElementById('toast');
+  const themeToggle = document.getElementById('themeToggle');
+  const langToggle = document.getElementById('langToggle');
+
+  let notes = [];
+  let currentNoteId = null;
+  let autoSaveTimer = null;
+  let settings = { theme: 'light', lang: 'ko' };
+  let currentRef = null;
+
+  // ── i18n ──
+  const i18n = {
+    ko: {
+      title: '메모', saved: '저장됨', newNote: '새 메모', placeholder: '내용을 입력하세요...',
+      save: '저장', share: '공유', delete: '삭제', memo: '메모',
+      settings: '설정', theme: '테마', lang: '언어', export: '내보내기', import: '가져오기',
+      noNotes: '메모가 없습니다', deleteConfirm: '이 메모를 삭제할까요?',
+      exported: '내보내기 완료', imported: '가져오기 완료',
+      copyToast: '복사됨 — 카카오톡에 붙여넣으세요', shareFail: '공유 실패',
+      noShareContent: '공유할 내용이 없습니다', savedToast: '저장됨',
+      refTitle: '참조 코드 입력', refDesc: '8자리 코드로 어디서나 메모를 불러옵니다',
+      refPlaceholder: '코드 입력', refLoad: '불러오기', refNew: '새로 만들기',
+      refHint: '코드가 없으면 \'새로 만들기\'를 눌러주세요',
+      refLabel: '내 참조 코드', invalidRef: '유효하지 않은 코드입니다',
+      refCreated: '새 참조 코드가 생성되었습니다', refLoaded: '메모를 불러왔습니다',
+      logout: '로그아웃', logoutConfirm: '로그아웃하면 이 기기에서 데이터가 삭제됩니다. 계속하시겠습니까?',
+      copiedRef: '참조 코드가 복사되었습니다',
+    },
+    en: {
+      title: 'Notes', saved: 'Saved', newNote: 'New Note', placeholder: 'Type something...',
+      save: 'Save', share: 'Share', delete: 'Delete', memo: 'Note',
+      settings: 'Settings', theme: 'Theme', lang: 'Language', export: 'Export', import: 'Import',
+      noNotes: 'No notes yet', deleteConfirm: 'Delete this note?',
+      exported: 'Exported successfully', imported: 'Imported successfully',
+      copyToast: 'Copied — paste into KakaoTalk', shareFail: 'Share failed',
+      noShareContent: 'Nothing to share', savedToast: 'Saved',
+      refTitle: 'Enter Reference Code', refDesc: 'Use your 8-digit code to access notes anywhere',
+      refPlaceholder: 'Enter code', refLoad: 'Load', refNew: 'Create New',
+      refHint: 'No code? Tap \'Create New\'',
+      refLabel: 'Your Reference Code', invalidRef: 'Invalid reference code',
+      refCreated: 'New reference code created', refLoaded: 'Notes loaded',
+      logout: 'Logout', logoutConfirm: 'Logging out will remove data from this device. Continue?',
+      copiedRef: 'Reference code copied',
+    }
+  };
+  function t(key) { return i18n[settings.lang]?.[key] || i18n.ko[key] || key; }
+
+  // ── Reference Code Management ──
+  function generateRef() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  }
+
+  function getStorageKey(ref) {
+    return STORAGE_PREFIX + (ref || currentRef || '');
+  }
+
+  function saveToCloud(showIndicator = true) {
+    if (!currentRef) return;
+    try {
+      localStorage.setItem(getStorageKey(), JSON.stringify(notes));
+      localStorage.setItem(CURRENT_REF_KEY, currentRef);
+      if (showIndicator) {
+        saveDot.classList.add('saved');
+        saveLabel.textContent = t('saved');
+        setTimeout(() => { saveDot.classList.remove('saved'); saveLabel.textContent = t('saved'); }, 1500);
+      }
+    } catch (e) {
+      showToast('Storage full — export your notes');
+    }
+  }
+
+  function loadFromCloud(ref) {
+    try {
+      const data = localStorage.getItem(STORAGE_PREFIX + ref);
+      if (data) {
+        notes = JSON.parse(data);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  function createNewRef() {
+    const ref = generateRef();
+    currentRef = ref;
+    notes = [];
+    saveToCloud(false);
+    localStorage.setItem(CURRENT_REF_KEY, ref);
+    showMainApp();
+    showToast(t('refCreated'));
+  }
+
+  function loginWithRef(ref) {
+    ref = ref.toUpperCase().trim();
+    if (ref.length !== 8 || !/^[A-Z0-9]{8}$/.test(ref)) {
+      showToast(t('invalidRef'));
+      return;
+    }
+    if (loadFromCloud(ref)) {
+      currentRef = ref;
+      localStorage.setItem(CURRENT_REF_KEY, ref);
+      showMainApp();
+      showToast(t('refLoaded'));
+    } else {
+      // Create new notes for this ref
+      currentRef = ref;
+      notes = [];
+      saveToCloud(false);
+      localStorage.setItem(CURRENT_REF_KEY, ref);
+      showMainApp();
+      showToast(t('refCreated'));
+    }
+  }
+
+  function showMainApp() {
+    refScreen.style.display = 'none';
+    mainApp.classList.add('active');
+    refBadge.textContent = currentRef;
+    refCodeDisplay.textContent = currentRef;
+    renderList();
+    updateSettingsUI();
+  }
+
+  function logout() {
+    if (confirm(t('logoutConfirm'))) {
+      currentRef = null;
+      notes = [];
+      localStorage.removeItem(CURRENT_REF_KEY);
+      mainApp.classList.remove('active');
+      refScreen.style.display = 'flex';
+      refInput.value = '';
+      detailView.classList.remove('open');
+      currentNoteId = null;
+    }
+  }
+
+  // ── Settings ──
+  function loadSettings() {
+    try { settings = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { theme:'light', lang:'ko' }; } catch { settings = { theme:'light', lang:'ko' }; }
+  }
+  function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); }
+  function updateSettingsUI() {
+    document.body.className = settings.theme === 'oled' ? 'oled' : '';
+    document.getElementById('appTitle').textContent = t('title');
+    saveLabel.textContent = t('saved');
+    document.getElementById('newNoteLabel').textContent = t('newNote');
+    detailTextarea.placeholder = t('placeholder');
+    detailSaveBtn.textContent = t('save');
+    document.getElementById('detailTitle').textContent = t('memo');
+    document.getElementById('settingsTitle').textContent = t('settings');
+    document.getElementById('themeLabel').textContent = t('theme');
+    document.getElementById('langLabel').textContent = t('lang');
+    document.getElementById('exportLabel').textContent = t('export');
+    document.getElementById('importLabel').textContent = t('import');
+    document.getElementById('refTitle').textContent = t('refTitle');
+    document.getElementById('refDesc').textContent = t('refDesc');
+    document.getElementById('refHint').textContent = t('refHint');
+    refInput.placeholder = t('refPlaceholder');
+    refLoadBtn.textContent = t('refLoad');
+    refNewBtn.textContent = t('refNew');
+    document.getElementById('refLabel').textContent = t('refLabel');
+    logoutBtn.textContent = t('logout');
+    document.querySelectorAll('#themeToggle .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.theme===settings.theme));
+    document.querySelectorAll('#langToggle .toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.lang===settings.lang));
+  }
+
+  function showToast(m, d=2000) { toast.textContent=m; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),d); }
+
+  function formatTime(ts) {
+    const d = new Date(ts), now = new Date();
+    const h = String(d.getHours()).padStart(2,'0'), m = String(d.getMinutes()).padStart(2,'0');
+    if (d.toDateString()===now.toDateString()) return settings.lang==='ko' ? `오늘 ${h}:${m}` : `Today ${h}:${m}`;
+    return `${d.getMonth()+1}/${d.getDate()} ${h}:${m}`;
+  }
+  function esc(s) { return s.replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function renderList() {
+    if (!notes.length) {
+      noteList.innerHTML = `<div class="empty-state"><span class="empty-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>${t('noNotes')}</div>`;
+      return;
+    }
+    const sorted = [...notes].sort((a,b)=>b.time-a.time);
+    noteList.innerHTML = sorted.map(n => `
+      <div class="note-row" data-id="${n.id}">
+        <div class="note-content"><div class="note-text">${esc(n.text)}</div><div class="note-time">${formatTime(n.time)}</div></div>
+        <button class="delete-btn" data-delete="${n.id}"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>`).join('');
+  }
+
+  function openNote(id) {
+    const note = notes.find(n=>n.id===id); if (!note) return;
+    currentNoteId = id; detailTextarea.value = note.text; detailTime.textContent = formatTime(note.time);
+    detailView.classList.add('open'); detailTextarea.focus();
+    detailTextarea.setSelectionRange(detailTextarea.value.length, detailTextarea.value.length);
+  }
+  function openNewNote() {
+    currentNoteId = null; detailTextarea.value = ''; detailTime.textContent = '';
+    detailView.classList.add('open'); detailTextarea.focus();
+  }
+  function closeDetail() {
+    clearTimeout(autoSaveTimer); saveCurrentDetailNote();
+    detailView.classList.remove('open'); currentNoteId = null; renderList();
+  }
+  function saveCurrentDetailNote() {
+    const text = detailTextarea.value.trim();
+    if (!text) { if (currentNoteId) { notes = notes.filter(n=>n.id!==currentNoteId); saveToCloud(); } return; }
+    if (currentNoteId) { const n=notes.find(n=>n.id===currentNoteId); if(n){ n.text=text; n.time=Date.now(); } }
+    else { const nn={ id:'n'+Date.now(), text, time:Date.now() }; notes.push(nn); currentNoteId=nn.id; }
+    saveToCloud(); detailTime.textContent = formatTime(Date.now());
+  }
+  function autoSaveDetail() {
+    clearTimeout(autoSaveTimer);
+    if (detailTextarea.value.trim()) autoSaveTimer = setTimeout(()=>{ saveCurrentDetailNote(); renderList(); }, 1200);
+  }
+  function deleteCurrentNote() {
+    if (!currentNoteId) return;
+    if (confirm(t('deleteConfirm'))) { notes = notes.filter(n=>n.id!==currentNoteId); saveToCloud(); closeDetail(); }
+  }
+  function shareCurrentNote() {
+    const text = detailTextarea.value.trim();
+    if (!text) { showToast(t('noShareContent')); return; }
+    const kakaotalkUrl = `kakaolink://send?text=${encodeURIComponent(text)}`;
+    const start = Date.now(); window.location.href = kakaotalkUrl;
+    setTimeout(()=>{
+      if (Date.now()-start < 1500) return;
+      if (navigator.share) { navigator.share({ title:t('memo'), text }).catch(()=>copyFallback(text)); }
+      else copyFallback(text);
+    }, 800);
+  }
+  function copyFallback(text) { navigator.clipboard.writeText(text).then(()=>showToast(t('copyToast'))).catch(()=>showToast(t('shareFail'))); }
+
+  function exportJSON() {
+    const blob = new Blob([JSON.stringify(notes, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob); const a = document.createElement('a');
+    a.href = url; a.download = `kakao_notes_${currentRef}_${new Date().toISOString().slice(0,10)}.json`; a.click();
+    URL.revokeObjectURL(url); showToast(t('exported'));
+  }
+  function importJSON(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (Array.isArray(data) && data.every(d=>d.id&&d.text&&d.time)) {
+          notes = data; saveToCloud(); renderList(); showToast(t('imported'));
+        } else { showToast('Invalid format'); }
+      } catch { showToast('Invalid JSON'); }
+    };
+    reader.readAsText(file);
+  }
+
+  // ── Events ──
+  refLoadBtn.addEventListener('click', () => loginWithRef(refInput.value));
+  refNewBtn.addEventListener('click', createNewRef);
+  refInput.addEventListener('keydown', e => { if (e.key==='Enter') loginWithRef(refInput.value); });
+  refBadge.addEventListener('click', () => {
+    navigator.clipboard.writeText(currentRef).then(()=>showToast(t('copiedRef')));
+  });
+
+  noteList.addEventListener('click', e => {
+    const del = e.target.closest('[data-delete]');
+    if (del) { e.stopPropagation(); const id=del.dataset.delete; notes=notes.filter(n=>n.id!==id); saveToCloud(); renderList(); return; }
+    const row = e.target.closest('.note-row'); if (row) openNote(row.dataset.id);
+  });
+  newNoteBtn.addEventListener('click', openNewNote);
+  backBtn.addEventListener('click', closeDetail);
+  detailSaveBtn.addEventListener('click', ()=>{ saveCurrentDetailNote(); renderList(); showToast(t('savedToast')); });
+  detailDeleteBtn.addEventListener('click', deleteCurrentNote);
+  detailShareBtn.addEventListener('click', shareCurrentNote);
+  detailTextarea.addEventListener('input', autoSaveDetail);
+  detailTextarea.addEventListener('blur', ()=>{ clearTimeout(autoSaveTimer); saveCurrentDetailNote(); renderList(); });
+  detailView.addEventListener('touchstart', e => { detailView._touchX = e.touches[0].clientX; });
+  detailView.addEventListener('touchend', e => { if (e.changedTouches[0].clientX - detailView._touchX > 80) closeDetail(); });
+
+  // Settings
+  settingsBtn.addEventListener('click', ()=>{ refCodeDisplay.textContent = currentRef; settingsOverlay.classList.add('open'); });
+  closeSettings.addEventListener('click', ()=>{ settingsOverlay.classList.remove('open'); });
+  settingsOverlay.addEventListener('click', e => { if (e.target===settingsOverlay) settingsOverlay.classList.remove('open'); });
+  themeToggle.addEventListener('click', e => {
+    const btn = e.target.closest('.toggle-btn'); if (!btn) return;
+    settings.theme = btn.dataset.theme; saveSettings(); updateSettingsUI();
+  });
+  langToggle.addEventListener('click', e => {
+    const btn = e.target.closest('.toggle-btn'); if (!btn) return;
+    settings.lang = btn.dataset.lang; saveSettings(); updateSettingsUI(); renderList();
+  });
+  exportBtn.addEventListener('click', exportJSON);
+  importBtn.addEventListener('click', ()=> importFile.click());
+  importFile.addEventListener('change', e => { if (e.target.files[0]) importJSON(e.target.files[0]); importFile.value=''; });
+  logoutBtn.addEventListener('click', logout);
+
+  // Init
+  loadSettings();
+  const savedRef = localStorage.getItem(CURRENT_REF_KEY);
+  if (savedRef && loadFromCloud(savedRef)) {
+    currentRef = savedRef;
+    showMainApp();
+  } else {
+    refScreen.style.display = 'flex';
+    mainApp.classList.remove('active');
+  }
+  updateSettingsUI();
+})();
+</script>
+</body>
+</html>
