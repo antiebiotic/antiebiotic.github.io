@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Kanban v1.3.3 • GitHub Pages Ready</title>
+  <meta name="application-name" content="Kanban">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kanban">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Kanban v1.3.3 • Accounts & Cloud Storage">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FEE500'/%3E%3Ctext x='50' y='68' text-anchor='middle' font-size='50' font-weight='bold' fill='%23000' font-family='sans-serif'%3EK%3C/text%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='38' fill='%23FEE500'/%3E%3Ctext x='96' y='130' text-anchor='middle' font-size='96' font-weight='bold' fill='%23000' font-family='sans-serif'%3EK%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bg-primary:#ffffff; --bg-secondary:#f9f9fb; --bg-tertiary:#f5f5f7; --bg-hover:#e8e8ed;
+      --text-primary:#1d1d1f; --text-secondary:#86868b; --text-tertiary:#aeaeb2;
+      --border-color:#e8e8ed; --border-light:#f0f0f5;
+      --accent-color:#FEE500; --accent-hover:#f5da00;
+      --danger-bg:#fff1f0; --danger-text:#cf1322;
+      --card-bg:#ffffff; --modal-overlay:rgba(0,0,0,0.4);
+      --toast-bg:#1d1d1f; --toast-text:#ffffff;
+      --input-bg:#ffffff; --scrollbar-thumb:#d2d2d7; --column-bg:#ffffff;
+      --urgent-bg:#ffe5e5; --urgent-text:#cc0000;
+      --feature-bg:#e5f0ff; --feature-text:#0066cc;
+      --bug-bg:#fff0e5; --bug-text:#cc5500;
+      --task-bg:#f0f0f5; --task-text:#555;
+      --done-bg:#e5ffe5; --done-text:#008800;
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    .dark-mode {
+      --bg-primary:#000000; --bg-secondary:#0a0a0a; --bg-tertiary:#141414; --bg-hover:#1f1f1f;
+      --text-primary:#f5f5f7; --text-secondary:#8e8e93; --text-tertiary:#636366;
+      --border-color:#1c1c1e; --border-light:#141414;
+      --card-bg:#0a0a0a; --modal-overlay:rgba(0,0,0,0.85);
+      --toast-bg:#f5f5f7; --toast-text:#000000;
+      --input-bg:#141414; --scrollbar-thumb:#2c2c2e; --column-bg:#0a0a0a;
+      --urgent-bg:#2a1010; --urgent-text:#ff4444;
+      --feature-bg:#0a1a2e; --feature-text:#64b5f6;
+      --bug-bg:#2a1a0a; --bug-text:#ff9500;
+      --task-bg:#1a1a1a; --task-text:#999;
+      --done-bg:#0a2a0a; --done-text:#81c784;
+      --danger-bg:#1a0a0a; --danger-text:#ef5350;
+    }
+    body {
+      background:#000; font-family:'Apple SD Gothic Neo','Noto Sans KR','Segoe UI','Helvetica Neue',sans-serif;
+      height:100dvh; width:100dvw; overflow:hidden; color:var(--text-primary);
+      display:flex; flex-direction:column; transition:background 0.3s,color 0.3s;
+      -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent;
+    }
+    .kanban-app { display:flex; flex-direction:column; height:100dvh; width:100dvw; background:var(--bg-primary); overflow:hidden; transition:background 0.3s; }
+    .app-header {
+      padding:0 14px; height:50px; background:var(--bg-primary); border-bottom:0.5px solid var(--border-color);
+      display:flex; align-items:center; justify-content:space-between; flex-shrink:0; min-height:50px; gap:6px;
+      transition:background 0.3s,border-color 0.3s; padding-top:env(safe-area-inset-top,0px);
+    }
+    .header-left { display:flex; align-items:center; gap:6px; flex-shrink:0; min-width:0; }
+    .app-title { font-size:1.15rem; font-weight:700; color:var(--text-primary); letter-spacing:-0.3px; white-space:nowrap; }
+    .version-tag { font-size:0.65rem; color:var(--text-tertiary); font-weight:400; }
+    .header-actions { display:flex; align-items:center; gap:4px; flex-shrink:0; }
+    .header-btn {
+      background:none; border:none; font-size:1.15rem; color:var(--text-primary); cursor:pointer;
+      padding:8px; border-radius:50%; transition:background 0.15s; flex-shrink:0;
+      width:36px; height:36px; display:flex; align-items:center; justify-content:center; position:relative;
+    }
+    .header-btn:active { background:var(--bg-tertiary); transform:scale(0.95); }
+    .avatar-btn {
+      width:32px; height:32px; border-radius:50%; background:var(--accent-color); display:flex;
+      align-items:center; justify-content:center; font-size:0.75rem; font-weight:700;
+      cursor:pointer; border:none; overflow:hidden; flex-shrink:0; padding:0;
+      transition:transform 0.15s; color:#000; margin-left:2px;
+    }
+    .avatar-btn:active { transform:scale(0.95); }
+    .avatar-btn img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .toolbar {
+      padding:6px 14px; background:var(--bg-primary); border-bottom:0.5px solid var(--border-color);
+      display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+      gap:8px; min-height:40px; transition:background 0.3s,border-color 0.3s;
+    }
+    .view-tabs { display:flex; gap:2px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; align-items:center; flex:1; min-width:0; }
+    .view-tabs::-webkit-scrollbar { display:none; }
+    .view-tab {
+      padding:5px 10px; border-radius:14px; font-size:0.78rem; font-weight:600; cursor:pointer;
+      border:none; background:none; color:var(--text-secondary); transition:all 0.2s;
+      font-family:inherit; white-space:nowrap; letter-spacing:-0.2px;
+    }
+    .view-tab.active { background:var(--accent-color); color:#000; font-weight:700; }
+    .view-tab .count { font-size:0.7rem; margin-left:2px; opacity:0.7; }
+    .toolbar-actions { display:flex; gap:2px; align-items:center; flex-shrink:0; }
+    .btn {
+      padding:5px 8px; border-radius:14px; font-size:0.75rem; font-weight:600; cursor:pointer;
+      border:none; font-family:inherit; transition:all 0.15s; display:flex; align-items:center;
+      gap:3px; white-space:nowrap; letter-spacing:-0.2px; background:none; color:var(--text-secondary);
+    }
+    .btn:active { transform:scale(0.95); background:var(--bg-tertiary); }
+    .btn-primary { background:var(--accent-color); color:#000; font-weight:700; }
+    .btn-primary:active { background:var(--accent-hover); }
+    .btn-danger { color:#FF3B30; }
+    .board-container {
+      flex:1; overflow-x:auto; overflow-y:auto; padding:12px; display:flex; gap:12px;
+      background:var(--bg-secondary); min-height:0; -webkit-overflow-scrolling:touch; transition:background 0.3s;
+    }
+    .column {
+      min-width:260px; max-width:360px; flex:1 0 auto; background:var(--column-bg);
+      border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px;
+      border:0.5px solid var(--border-color); transition:border-color 0.2s,background 0.3s; height:fit-content; max-height:100%;
+    }
+    .column.drag-over { border-color:var(--accent-color); }
+    .column-header { display:flex; align-items:center; justify-content:space-between; padding:0 2px 4px; flex-shrink:0; }
+    .column-title-group { display:flex; align-items:center; gap:6px; min-width:0; }
+    .column-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .column-name { font-weight:700; font-size:0.85rem; color:var(--text-primary); white-space:nowrap; letter-spacing:-0.2px; }
+    .column-count { font-size:0.7rem; color:var(--text-tertiary); font-weight:500; }
+    .column-actions { display:flex; gap:1px; }
+    .column-action-btn { background:none; border:none; color:var(--text-tertiary); cursor:pointer; padding:4px 6px; border-radius:50%; font-size:0.8rem; transition:all 0.15s; flex-shrink:0; width:26px; height:26px; display:flex; align-items:center; justify-content:center; }
+    .column-action-btn:active { background:var(--bg-tertiary); color:var(--text-primary); }
+    .delete-column-btn:active { color:#FF3B30; background:var(--danger-bg); }
+    .card-list { display:flex; flex-direction:column; gap:6px; overflow-y:auto; flex:1; min-height:0; padding-right:2px; max-height:calc(100dvh - 240px); }
+    .task-card { background:var(--card-bg); border-radius:10px; padding:10px 12px; border:0.5px solid var(--border-color); cursor:pointer; transition:all 0.15s ease; display:flex; flex-direction:column; gap:6px; user-select:none; flex-shrink:0; -webkit-tap-highlight-color:transparent; }
+    .task-card:active { transform:scale(0.98); background:var(--bg-tertiary); }
+    .task-card.hidden { display:none; }
+    .task-card.dragging { opacity:0.3; transform:scale(0.95); }
+    .task-card.due-soon { border-left:3px solid #FF9500; }
+    .task-card.overdue { border-left:3px solid #FF3B30; }
+    .card-labels { display:flex; gap:3px; flex-wrap:wrap; align-items:center; }
+    .label { padding:2px 6px; border-radius:8px; font-size:0.6rem; font-weight:700; letter-spacing:-0.1px; }
+    .label.urgent { background:var(--urgent-bg); color:var(--urgent-text); }
+    .label.feature { background:var(--feature-bg); color:var(--feature-text); }
+    .label.bug { background:var(--bug-bg); color:var(--bug-text); }
+    .label.task { background:var(--task-bg); color:var(--task-text); }
+    .label.done { background:var(--done-bg); color:var(--done-text); }
+    .card-title { font-weight:600; font-size:0.82rem; color:var(--text-primary); line-height:1.35; display:flex; align-items:flex-start; gap:5px; letter-spacing:-0.2px; }
+    .card-title i { color:var(--accent-color); margin-top:2px; flex-shrink:0; font-size:0.7rem; }
+    .card-description { font-size:0.72rem; color:var(--text-secondary); line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .card-meta { display:flex; align-items:center; justify-content:space-between; font-size:0.65rem; color:var(--text-tertiary); flex-wrap:wrap; gap:4px; }
+    .card-assignee { display:flex; align-items:center; gap:3px; }
+    .card-assignee-avatar { width:16px; height:16px; border-radius:50%; background:var(--accent-color); display:flex; align-items:center; justify-content:center; font-size:0.55rem; font-weight:700; color:#000; flex-shrink:0; overflow:hidden; }
+    .card-assignee-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .card-date { display:flex; align-items:center; gap:2px; }
+    .card-countdown { font-size:0.6rem; font-weight:700; padding:1px 5px; border-radius:6px; background:var(--bg-tertiary); color:var(--text-secondary); }
+    .card-countdown.soon { background:#FFF3CD; color:#856404; }
+    .card-countdown.overdue { background:#FFE5E5; color:#CC0000; }
+    .dark-mode .card-countdown.soon { background:#3a2a00; color:#ffc107; }
+    .dark-mode .card-countdown.overdue { background:#2a0000; color:#ff4444; }
+    .card-actions-row { display:flex; gap:3px; margin-top:2px; }
+    .card-move-btn { flex:1; padding:4px 5px; border:0.5px solid var(--border-color); background:var(--bg-tertiary); border-radius:6px; font-size:0.6rem; cursor:pointer; transition:all 0.15s; color:var(--text-secondary); font-family:inherit; text-align:center; -webkit-tap-highlight-color:transparent; }
+    .card-move-btn:active { background:var(--accent-color); border-color:var(--accent-color); color:#000; }
+    .empty-column-message { text-align:center; padding:20px 10px; color:var(--text-tertiary); font-size:0.75rem; display:none; }
+    .empty-column-message i { font-size:1.3rem; display:block; margin-bottom:4px; opacity:0.5; }
+    .add-column-btn { min-width:260px; max-width:360px; flex:1 0 auto; background:none; border:1px dashed var(--border-color); border-radius:14px; padding:20px; display:flex; align-items:center; justify-content:center; gap:5px; cursor:pointer; color:var(--text-tertiary); font-weight:600; font-size:0.82rem; transition:all 0.2s; height:fit-content; font-family:inherit; }
+    .add-column-btn:active { border-color:var(--accent-color); color:var(--accent-color); }
+
+    /* Login */
+    .login-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg-primary); z-index:3000; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; gap:16px; transition:background 0.3s; overflow-y:auto; }
+    .login-screen.hidden { display:none; }
+    .login-logo { width:72px; height:72px; background:var(--accent-color); border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:2.2rem; color:#000; flex-shrink:0; }
+    .login-title { font-size:1.4rem; font-weight:700; color:var(--text-primary); }
+    .login-form { width:100%; max-width:300px; display:flex; flex-direction:column; gap:8px; }
+    .login-input { width:100%; padding:12px 14px; border:0.5px solid var(--border-color); border-radius:10px; font-size:0.85rem; font-family:inherit; outline:none; background:var(--input-bg); color:var(--text-primary); }
+    .login-input:focus { border-color:var(--accent-color); }
+    .login-btn { width:100%; padding:12px; border-radius:10px; font-size:0.85rem; font-weight:700; cursor:pointer; border:none; font-family:inherit; }
+    .login-btn-primary { background:var(--accent-color); color:#000; }
+    .login-btn-secondary { background:var(--bg-tertiary); color:var(--text-primary); }
+    .login-error { color:#FF3B30; font-size:0.7rem; text-align:center; min-height:16px; }
+    .login-toggle { font-size:0.7rem; color:var(--text-secondary); cursor:pointer; text-align:center; }
+    .login-toggle b { color:var(--accent-color); }
+    .login-info { font-size:0.65rem; color:var(--text-tertiary); text-align:center; max-width:300px; line-height:1.3; }
+
+    .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--modal-overlay); z-index:1000; display:none; align-items:flex-end; justify-content:center; }
+    .modal-overlay.active { display:flex; }
+    .modal-sheet { background:var(--bg-primary); border-radius:16px 16px 0 0; width:100%; max-width:500px; max-height:85vh; overflow-y:auto; animation:slideUp 0.25s ease; transition:background 0.3s; padding-bottom:var(--safe-bottom); }
+    @keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
+    .modal-header { padding:14px 18px; border-bottom:0.5px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; }
+    .modal-title { font-weight:700; font-size:1rem; color:var(--text-primary); }
+    .modal-close { background:none; border:none; font-size:1.1rem; cursor:pointer; color:var(--text-secondary); padding:6px; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; }
+    .modal-body { padding:14px 18px; }
+    .form-group { margin-bottom:12px; }
+    .form-label { display:block; font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-bottom:4px; }
+    .form-input,.form-textarea,.form-select { width:100%; padding:10px 12px; border:0.5px solid var(--border-color); border-radius:8px; font-size:0.85rem; font-family:inherit; outline:none; transition:border 0.2s; background:var(--input-bg); color:var(--text-primary); }
+    .form-input:focus,.form-textarea:focus,.form-select:focus { border-color:var(--accent-color); }
+    .form-textarea { resize:vertical; min-height:50px; }
+    .modal-footer { padding:10px 18px 14px; border-top:0.5px solid var(--border-color); display:flex; gap:8px; }
+    .profile-pic-section { display:flex; align-items:center; gap:14px; margin-bottom:14px; padding:12px; background:var(--bg-tertiary); border-radius:12px; }
+    .profile-pic-large { width:60px; height:60px; border-radius:50%; background:var(--accent-color); display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:700; overflow:hidden; flex-shrink:0; color:#000; }
+    .profile-pic-large img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .profile-pic-actions { display:flex; flex-direction:column; gap:5px; }
+    .settings-section { margin-bottom:14px; }
+    .settings-section h4 { font-size:0.8rem; font-weight:700; margin-bottom:6px; color:var(--text-primary); }
+    .toast-notification { position:fixed; bottom:calc(50px + var(--safe-bottom)); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:10px 20px; border-radius:20px; font-size:0.8rem; font-weight:600; z-index:2000; opacity:0; transition:opacity 0.3s; pointer-events:none; white-space:nowrap; display:flex; align-items:center; gap:8px; }
+    .toast-notification.show { opacity:1; }
+    .toast-undo { background:var(--accent-color); color:#000; border:none; padding:4px 10px; border-radius:12px; font-weight:700; cursor:pointer; font-size:0.75rem; font-family:inherit; }
+    .card-list::-webkit-scrollbar { width:2px; } .card-list::-webkit-scrollbar-thumb { background:var(--scrollbar-thumb); border-radius:2px; }
+    @media(max-width:768px) { .app-header { padding:0 10px; height:46px; } .board-container { flex-direction:column; padding:8px; gap:10px; } .column,.add-column-btn { min-width:100%; max-width:100%; } .card-list { max-height:35vh; } .card-actions-row { display:flex!important; } }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-logo"><i class="fas fa-columns"></i></div>
+    <div class="login-title">Kanban</div>
+    <div class="login-error" id="loginError"></div>
+    <form class="login-form" id="signInForm">
+      <input type="text" class="login-input" id="signInUser" placeholder="Username" autocomplete="username">
+      <input type="password" class="login-input" id="signInPass" placeholder="Password" autocomplete="current-password">
+      <button type="submit" class="login-btn login-btn-primary">Sign In</button>
+    </form>
+    <form class="login-form" id="signUpForm" style="display:none">
+      <input type="text" class="login-input" id="signUpName" placeholder="Name">
+      <input type="text" class="login-input" id="signUpUser" placeholder="Username" autocomplete="username">
+      <input type="password" class="login-input" id="signUpPass" placeholder="Password" autocomplete="new-password">
+      <button type="submit" class="login-btn login-btn-primary">Create Account</button>
+    </form>
+    <button class="login-btn login-btn-secondary" id="guestBtn" style="max-width:300px">Continue as Guest</button>
+    <div class="login-toggle" id="loginToggle">Don't have an account? <b>Create one</b></div>
+    <div class="login-info">Your account and board data are saved in this browser.<br>Export your data to move between devices.</div>
+  </div>
+
+  <!-- Main App -->
+  <div class="kanban-app" id="kanbanApp" style="display:none">
+    <header class="app-header">
+      <div class="header-left"><span class="app-title">Kanban</span><span class="version-tag">v1.3.3</span></div>
+      <div class="header-actions">
+        <button class="header-btn" id="searchBtn" title="Search"><i class="fas fa-search"></i></button>
+        <button class="header-btn" id="shareBtn" title="Share"><i class="fas fa-share-alt"></i></button>
+        <button class="header-btn" id="settingsBtn" title="Settings"><i class="fas fa-cog"></i></button>
+        <button class="avatar-btn" id="profileBtn" title="Profile"><img id="headerAvatar" src="" alt="Profile" style="display:none"><span id="headerAvatarText">ME</span></button>
+      </div>
+    </header>
+    <div class="toolbar">
+      <div class="view-tabs" id="viewTabs">
+        <button class="view-tab active" data-filter="all"><span class="tab-label" data-ko="전체" data-en="All">All</span> <span class="count">0</span></button>
+        <button class="view-tab" data-filter="todo"><span class="tab-label" data-ko="할 일" data-en="To Do">To Do</span> <span class="count">0</span></button>
+        <button class="view-tab" data-filter="inprogress"><span class="tab-label" data-ko="진행중" data-en="In Progress">In Progress</span> <span class="count">0</span></button>
+        <button class="view-tab" data-filter="done"><span class="tab-label" data-ko="완료" data-en="Done">Done</span> <span class="count">0</span></button>
+      </div>
+      <div class="toolbar-actions"><button class="btn btn-primary" id="globalAddBtn"><i class="fas fa-plus"></i> <span data-ko="추가" data-en="Add">Add</span></button></div>
+    </div>
+    <main class="board-container" id="boardContainer"></main>
+  </div>
+
+  <!-- Task Modal -->
+  <div class="modal-overlay" id="taskModal"><div class="modal-sheet"><div class="modal-header"><span class="modal-title" data-ko="작업 상세" data-en="Task Details">Task Details</span><button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button></div><div class="modal-body">
+    <div class="form-group"><label class="form-label" data-ko="제목" data-en="Title">Title</label><input type="text" class="form-input" id="editTitle"></div>
+    <div class="form-group"><label class="form-label" data-ko="설명" data-en="Description">Description</label><textarea class="form-textarea" id="editDesc"></textarea></div>
+    <div class="form-group"><label class="form-label" data-ko="담당자" data-en="Assignee">Assignee</label><input type="text" class="form-input" id="editAssignee"></div>
+    <div class="form-group"><label class="form-label" data-ko="우선순위" data-en="Priority">Priority</label><select class="form-select" id="editPriority"><option value="task" data-ko="작업" data-en="Task">Task</option><option value="feature" data-ko="기능" data-en="Feature">Feature</option><option value="urgent" data-ko="긴급" data-en="Urgent">Urgent</option><option value="bug" data-ko="버그" data-en="Bug">Bug</option></select></div>
+    <div class="form-group"><label class="form-label" data-ko="마감일" data-en="Due Date">Due Date</label><input type="date" class="form-input" id="editDueDate"></div>
+    <div class="form-group"><label class="form-label" data-ko="상태" data-en="Status">Status</label><select class="form-select" id="editStatus"></select></div>
+  </div><div class="modal-footer"><button class="btn btn-danger" id="deleteTaskBtn" style="flex:1"><span data-ko="삭제" data-en="Delete">Delete</span></button><button class="btn btn-primary" id="saveTaskBtn" style="flex:2"><span data-ko="저장" data-en="Save">Save</span></button></div></div></div>
+
+  <!-- Profile Modal -->
+  <div class="modal-overlay" id="profileModal"><div class="modal-sheet"><div class="modal-header"><span class="modal-title" data-ko="프로필" data-en="Profile">Profile</span><button class="modal-close" id="profileClose"><i class="fas fa-times"></i></button></div><div class="modal-body">
+    <div class="profile-pic-section"><div class="profile-pic-large" id="profilePicLarge"><img id="profilePicImg" src="" alt="Profile" style="display:none"><span id="profilePicText">ME</span></div><div class="profile-pic-actions"><button class="btn" id="changePhotoBtn" style="background:var(--bg-tertiary)"><i class="fas fa-camera"></i> <span data-ko="사진 변경" data-en="Change Photo">Change Photo</span></button><button class="btn btn-danger" id="removePhotoBtn"><i class="fas fa-times"></i> <span data-ko="사진 제거" data-en="Remove">Remove</span></button><input type="file" id="photoInput" accept="image/*" style="display:none"></div></div>
+    <div class="form-group"><label class="form-label" data-ko="이름" data-en="Name">Name</label><input type="text" class="form-input" id="profileName"></div>
+  </div><div class="modal-footer"><button class="btn btn-primary" id="saveProfileBtn" style="width:100%"><span data-ko="저장" data-en="Save">Save</span></button></div></div></div>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settingsModal"><div class="modal-sheet"><div class="modal-header"><span class="modal-title" data-ko="설정" data-en="Settings">Settings</span><button class="modal-close" id="settingsClose"><i class="fas fa-times"></i></button></div><div class="modal-body">
+    <div class="settings-section"><h4 data-ko="계정" data-en="Account">Account</h4><button class="btn" id="logoutBtn" style="background:var(--bg-tertiary);color:#FF3B30"><i class="fas fa-sign-out-alt"></i> <span data-ko="로그아웃" data-en="Logout">Logout</span></button></div>
+    <div class="settings-section"><h4 data-ko="언어" data-en="Language">Language</h4><div style="display:flex;gap:6px"><button class="btn" id="langKoBtn" style="background:var(--bg-tertiary)">한국어</button><button class="btn" id="langEnBtn" style="background:var(--bg-tertiary)">English</button></div></div>
+    <div class="settings-section"><h4 data-ko="테마" data-en="Theme">Theme</h4><div style="display:flex;gap:6px"><button class="btn" id="lightModeBtn" style="background:var(--bg-tertiary)"><i class="fas fa-sun"></i> <span data-ko="라이트" data-en="Light">Light</span></button><button class="btn" id="darkModeBtn" style="background:var(--bg-tertiary)"><i class="fas fa-moon"></i> <span data-ko="다크" data-en="Dark">Dark</span></button></div></div>
+    <div class="settings-section"><h4 data-ko="데이터" data-en="Data">Data</h4><div style="display:flex;gap:6px"><button class="btn" id="settingsExport" style="background:var(--bg-tertiary)"><i class="fas fa-download"></i> <span data-ko="내보내기" data-en="Export">Export</span></button><button class="btn" id="settingsImport" style="background:var(--bg-tertiary)"><i class="fas fa-upload"></i> <span data-ko="가져오기" data-en="Import">Import</span></button><button class="btn btn-danger" id="settingsReset"><i class="fas fa-trash-alt"></i> <span data-ko="초기화" data-en="Reset">Reset</span></button></div></div>
+  </div></div></div>
+
+  <!-- Add Task Popup -->
+  <div class="modal-overlay" id="addTaskPopup"><div class="modal-sheet"><div class="modal-header"><span class="modal-title" data-ko="새 작업" data-en="New Task">New Task</span><button class="modal-close" id="popupClose"><i class="fas fa-times"></i></button></div><div class="modal-body">
+    <input type="text" class="form-input" id="quickTaskTitle" data-ko-placeholder="할 일 입력..." data-en-placeholder="Enter task title..." placeholder="Enter task title..." style="margin-bottom:10px">
+    <select class="form-select" id="quickTaskPriority" style="margin-bottom:10px"><option value="task" data-ko="작업" data-en="Task">Task</option><option value="feature" data-ko="기능" data-en="Feature">Feature</option><option value="urgent" data-ko="긴급" data-en="Urgent">Urgent</option><option value="bug" data-ko="버그" data-en="Bug">Bug</option></select>
+    <input type="date" class="form-input" id="quickTaskDueDate" style="margin-bottom:10px">
+    <select class="form-select" id="quickTaskStatus"></select>
+  </div><div class="modal-footer"><button class="btn" id="popupCancel" style="flex:1;background:var(--bg-tertiary)"><span data-ko="취소" data-en="Cancel">Cancel</span></button><button class="btn btn-primary" id="popupAdd" style="flex:2"><span data-ko="추가" data-en="Add">Add</span></button></div></div></div>
+
+  <div class="toast-notification" id="appToast"></div>
+
+  <script>
+(function(){
+  const STORAGE_KEY='kanban_v133_github';
+  const USERS_KEY='kanban_users_db';
+  const DEFAULT_COLUMNS=[{id:'todo',name:{ko:'할 일',en:'To Do'},color:'#FEE500'},{id:'inprogress',name:{ko:'진행중',en:'In Progress'},color:'#007AFF'},{id:'done',name:{ko:'완료',en:'Done'},color:'#34C759'}];
+  const PRIORITIES={urgent:{ko:'긴급',en:'Urgent'},feature:{ko:'기능',en:'Feature'},bug:{ko:'버그',en:'Bug'},task:{ko:'작업',en:'Task'}};
+
+  let taskIdCounter=1,currentFilter='all',editingCard=null,isDarkMode=true,accentColor='#FEE500';
+  let profileData={name:'ME',photo:null},columns=JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
+  let currentLang='en',currentUser=null;
+
+  const boardContainer=document.getElementById('boardContainer'),taskModal=document.getElementById('taskModal');
+  const addTaskPopup=document.getElementById('addTaskPopup'),settingsModal=document.getElementById('settingsModal');
+  const profileModal=document.getElementById('profileModal'),toast=document.getElementById('appToast');
+  const viewTabs=document.getElementById('viewTabs'),loginScreen=document.getElementById('loginScreen');
+  const kanbanApp=document.getElementById('kanbanApp');
+
+  function t(key){const tr={saved:{ko:'저장됨',en:'Saved'},deleted:{ko:'삭제됨',en:'Deleted'},added:{ko:'추가됨',en:'Added'},enterTitle:{ko:'제목을 입력하세요',en:'Enter a title'},confirmDelete:{ko:'삭제하시겠습니까?',en:'Delete this task?'},confirmReset:{ko:'초기화하시겠습니까?',en:'Reset board?'},confirmDeleteCol:{ko:'리스트를 삭제하시겠습니까?',en:'Delete this list?'},reset:{ko:'초기화됨',en:'Board reset'},noData:{ko:'데이터 없음',en:'No data'},imported:{ko:'가져오기 완료',en:'Imported'},invalidFile:{ko:'잘못된 파일',en:'Invalid file'},profileSaved:{ko:'프로필 저장됨',en:'Profile saved'},photoRemoved:{ko:'사진 제거됨',en:'Photo removed'},colAdded:{ko:'리스트 추가됨',en:'List added'},colDeleted:{ko:'리스트 삭제됨',en:'List deleted'},empty:{ko:'비어있음',en:'Empty'},addList:{ko:'리스트 추가',en:'Add List'},newList:{ko:'새 리스트 이름:',en:'New list name:'},restored:{ko:'복구됨',en:'Restored'},langChanged:{ko:'한국어로 변경됨',en:'Switched to English'},loginFailed:{ko:'아이디 또는 비밀번호가 틀렸습니다',en:'Invalid username or password'},userExists:{ko:'이미 존재하는 아이디입니다',en:'Username already exists'},signupDone:{ko:'회원가입 완료! 로그인해주세요',en:'Account created! Please sign in'},loggedOut:{ko:'로그아웃되었습니다',en:'Logged out'},welcome:{ko:'님 환영합니다',en:' welcome'}};return tr[key]?.[currentLang]||key;}
+
+  function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY))||{}}catch(e){return{}}}
+  function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u))}
+  function hashPW(p){let h=0;for(let i=0;i<p.length;i++){h=((h<<5)-h)+p.charCodeAt(i);h|=0}return'h_'+Math.abs(h).toString(36)}
+
+  function login(user){currentUser=user;profileData={name:user.name,photo:user.photo||null};loginScreen.classList.add('hidden');kanbanApp.style.display='flex';columns=loadColumns();rebuildBoard();applyFilter('all');applyTheme();updateProfileUI();updateUILanguage();showToast(user.name+t('welcome'))}
+  function logout(){currentUser=null;saveAllData();loginScreen.classList.remove('hidden');kanbanApp.style.display='none';showToast(t('loggedOut'))}
+
+  function loadColumns(){const s=localStorage.getItem(getKey());if(s){try{const d=JSON.parse(s);if(d.columns&&d.columns.length)return JSON.parse(JSON.stringify(d.columns))}catch(e){}}return JSON.parse(JSON.stringify(DEFAULT_COLUMNS))}
+  function getKey(){return STORAGE_KEY+'_'+(currentUser?currentUser.id:'guest')}
+
+  function getCountdown(dueDate){if(!dueDate)return null;const now=new Date();now.setHours(0,0,0,0);const due=new Date(dueDate);due.setHours(0,0,0,0);const diff=Math.ceil((due-now)/(1000*60*60*24));if(diff<0)return {text:'D+'+Math.abs(diff),cls:'overdue'};if(diff===0)return {text:'D-Day',cls:'soon'};if(diff<=3)return {text:'D-'+diff,cls:'soon'};return {text:'D-'+diff,cls:''}}
+
+  function updateCardAppearance(card,priority,dueDate){card.querySelector('.card-labels').innerHTML='';if(priority&&priority!=='done'){const lbl=document.createElement('span');lbl.className='label '+priority;lbl.textContent=PRIORITIES[priority]?PRIORITIES[priority][currentLang]:priority;card.querySelector('.card-labels').appendChild(lbl)}card.classList.remove('due-soon','overdue');const cd=getCountdown(dueDate);let ce=card.querySelector('.card-countdown');if(cd&&(cd.cls==='soon'||cd.cls==='overdue')){card.classList.add(cd.cls==='soon'?'due-soon':'overdue');if(!ce){ce=document.createElement('span');ce.className='card-countdown';card.querySelector('.card-labels').appendChild(ce)}ce.textContent=cd.text;ce.className='card-countdown '+cd.cls}else if(ce){ce.remove()}}
+
+  function setLanguage(lang){currentLang=lang;updateUILanguage();saveAllData();showToast(t('langChanged'))}
+
+  function updateUILanguage(){document.querySelectorAll('[data-ko][data-en]').forEach(el=>{if(el.tagName==='OPTION')el.textContent=el.getAttribute('data-'+currentLang);else el.textContent=el.getAttribute('data-'+currentLang)});document.querySelectorAll('[data-ko-placeholder][data-en-placeholder]').forEach(el=>el.placeholder=el.getAttribute('data-'+currentLang+'-placeholder'));document.getElementById('quickTaskTitle').placeholder=currentLang==='ko'?'할 일 입력...':'Enter task title...';updateColumnNames();updateFilterTabs();updateStatusSelects();document.querySelectorAll('.task-card').forEach(c=>{if(c.dataset.status!=='done')updateCardAppearance(c,c.dataset.priority,c.dataset.dueDate)})}
+  function updateColumnNames(){document.querySelectorAll('.column').forEach(col=>{const cd=columns.find(c=>c.id===col.dataset.status);if(cd){const n=col.querySelector('.column-name');if(n)n.textContent=cd.name[currentLang]}})}
+  function updateFilterTabs(){viewTabs.querySelectorAll('.view-tab').forEach(t=>{const f=t.dataset.filter;if(f!=='all'&&!DEFAULT_COLUMNS.find(c=>c.id===f))t.remove()});columns.forEach(col=>{if(!DEFAULT_COLUMNS.find(c=>c.id===col.id)&&!viewTabs.querySelector('[data-filter="'+col.id+'"]')){const tab=document.createElement('button');tab.className='view-tab';tab.dataset.filter=col.id;tab.innerHTML='<span class="tab-label">'+col.name[currentLang]+'</span> <span class="count">0</span>';viewTabs.appendChild(tab)}});document.querySelectorAll('.view-tab .tab-label').forEach(el=>{const f=el.parentElement.dataset.filter;const cd=DEFAULT_COLUMNS.find(c=>c.id===f)||columns.find(c=>c.id===f);if(cd)el.textContent=cd.name[currentLang]})}
+  function applyTheme(){document.body.classList.toggle('dark-mode',isDarkMode);document.querySelector('meta[name="theme-color"]').content=isDarkMode?'#000000':'#ffffff';saveAllData()}
+  function updateProfileUI(){const ha=document.getElementById('headerAvatar'),hat=document.getElementById('headerAvatarText'),pi=document.getElementById('profilePicImg'),pt=document.getElementById('profilePicText');if(profileData.photo){ha.src=profileData.photo;ha.style.display='block';hat.style.display='none';pi.src=profileData.photo;pi.style.display='block';pt.style.display='none'}else{ha.style.display='none';hat.style.display='block';hat.textContent=profileData.name.charAt(0).toUpperCase();pi.style.display='none';pt.style.display='block';pt.textContent=profileData.name.charAt(0).toUpperCase()}document.getElementById('profileName').value=profileData.name}
+  function showToast(msg,undoAction){toast.textContent=msg;if(undoAction){const b=document.createElement('button');b.className='toast-undo';b.textContent=currentLang==='ko'?'실행 취소':'Undo';b.addEventListener('click',()=>{undoAction();toast.classList.remove('show')});toast.appendChild(b)}toast.classList.add('show');clearTimeout(toast._hideTimer);toast._hideTimer=setTimeout(()=>toast.classList.remove('show'),undoAction?4000:1800)}
+  function getCardTitle(card){const t=card.querySelector('.card-title');if(!t)return'';const c=t.cloneNode(true);const i=c.querySelector('i');if(i)i.remove();return c.textContent.trim()}
+  function escapeHTML(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+  function updateColumnCounts(){columns.forEach(col=>{const ce=document.querySelector('.column[data-status="'+col.id+'"]');if(ce){const cnt=ce.querySelectorAll('.task-card').length;ce.querySelector('.column-count').textContent=cnt;ce.querySelector('.empty-column-message').style.display=cnt===0?'block':'none'}});const total=document.querySelectorAll('.task-card').length;const ac=document.querySelector('[data-filter="all"] .count');if(ac)ac.textContent=total;columns.forEach(col=>{const tc=document.querySelector('[data-filter="'+col.id+'"] .count');if(tc)tc.textContent=document.querySelectorAll('.column[data-status="'+col.id+'"] .task-card').length})}
+  function applyFilter(filter){currentFilter=filter;document.querySelectorAll('.task-card').forEach(c=>c.classList.toggle('hidden',filter!=='all'&&c.dataset.status!==filter))}
+  function moveCard(card,newStatus){const tl=document.querySelector('.column[data-status="'+newStatus+'"] .card-list');if(!tl||!card)return;card.dataset.status=newStatus;updateCardMoveButtons(card);if(newStatus==='done'){card.querySelector('.card-labels').innerHTML='<span class="label done">'+(currentLang==='ko'?'완료':'Done')+'</span>';card.classList.remove('due-soon','overdue');const cd=card.querySelector('.card-countdown');if(cd)cd.remove()}tl.appendChild(card);updateColumnCounts();saveAllData();applyFilter(currentFilter)}
+  function updateCardMoveButtons(card){const ar=card.querySelector('.card-actions-row');if(!ar)return;const cs=card.dataset.status,ci=columns.findIndex(c=>c.id===cs);ar.innerHTML=columns.filter(c=>c.id!==cs).map(c=>{const arrow=columns.findIndex(col=>col.id===c.id)>ci?'→':'←';return'<button class="card-move-btn" data-move="'+c.id+'">'+arrow+' '+c.name[currentLang]+'</button>'}).join('');ar.querySelectorAll('.card-move-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();moveCard(card,b.dataset.move)}))}
+  function createCardElement(title,status,desc,assignee,dueDate,priority,dateStr,idOverride){if(!dateStr){var d=new Date();dateStr=(d.getMonth()+1)+'/'+d.getDate()}if(!assignee)assignee=profileData.name||'ME';if(!desc)desc='';if(!priority)priority='task';var id=idOverride||taskIdCounter++;var card=document.createElement('div');card.className='task-card';card.dataset.status=status;card.dataset.id=id;card.draggable=true;if(status!=='done'){card.dataset.priority=priority;if(dueDate)card.dataset.dueDate=dueDate}var av=profileData.photo?'<img src="'+profileData.photo+'" alt="'+assignee+'">':assignee.charAt(0).toUpperCase();card.innerHTML='<div class="card-labels"></div><div class="card-title"><i class="far fa-sticky-note"></i> '+escapeHTML(title)+'</div><div class="card-description">'+escapeHTML(desc||(currentLang==='ko'?'설명 없음':'No description'))+'</div><div class="card-meta"><div class="card-assignee"><span class="card-assignee-avatar">'+av+'</span> '+escapeHTML(assignee)+'</div><div class="card-date"><i class="far fa-calendar-alt"></i> '+dateStr+'</div></div><div class="card-actions-row"></div>';updateCardMoveButtons(card);if(status!=='done')updateCardAppearance(card,priority,dueDate);else card.querySelector('.card-labels').innerHTML='<span class="label done">'+(currentLang==='ko'?'완료':'Done')+'</span>';return card}
+  function attachCardEvents(card){card.addEventListener('click',e=>{if(!e.target.closest('.card-move-btn'))openEditModal(card)});card.addEventListener('dragstart',e=>{card.classList.add('dragging');e.dataTransfer.setData('text/plain',card.dataset.id)});card.addEventListener('dragend',()=>card.classList.remove('dragging'))}
+  function openEditModal(card){editingCard=card;document.getElementById('editTitle').value=getCardTitle(card);document.getElementById('editDesc').value=card.querySelector('.card-description')?card.querySelector('.card-description').textContent:'';var ae=card.querySelector('.card-assignee');document.getElementById('editAssignee').value=ae?ae.textContent.trim():profileData.name;document.getElementById('editPriority').value=card.dataset.priority||'task';document.getElementById('editDueDate').value=card.dataset.dueDate||'';updateStatusSelects();document.getElementById('editStatus').value=card.dataset.status;taskModal.classList.add('active');document.getElementById('editTitle').focus()}
+  function closeEditModal(){taskModal.classList.remove('active');editingCard=null}
+  function saveTaskChanges(){if(!editingCard)return;var title=document.getElementById('editTitle').value.trim();if(!title){showToast(t('enterTitle'));return}var desc=document.getElementById('editDesc').value.trim(),assignee=document.getElementById('editAssignee').value.trim()||profileData.name;var priority=document.getElementById('editPriority').value,dueDate=document.getElementById('editDueDate').value,newStatus=document.getElementById('editStatus').value;editingCard.querySelector('.card-title').innerHTML='<i class="far fa-sticky-note"></i> '+escapeHTML(title);editingCard.querySelector('.card-description').textContent=desc||(currentLang==='ko'?'설명 없음':'No description');var av=profileData.photo?'<img src="'+profileData.photo+'" alt="'+assignee+'">':assignee.charAt(0).toUpperCase();var ae=editingCard.querySelector('.card-assignee');if(ae)ae.innerHTML='<span class="card-assignee-avatar">'+av+'</span> '+escapeHTML(assignee);if(newStatus==='done'){editingCard.querySelector('.card-labels').innerHTML='<span class="label done">'+(currentLang==='ko'?'완료':'Done')+'</span>';editingCard.classList.remove('due-soon','overdue');var cd=editingCard.querySelector('.card-countdown');if(cd)cd.remove();editingCard.removeAttribute('data-priority');editingCard.removeAttribute('data-due-date')}else{editingCard.dataset.priority=priority;if(dueDate)editingCard.dataset.dueDate=dueDate;else editingCard.removeAttribute('data-due-date');updateCardAppearance(editingCard,priority,dueDate)}if(editingCard.dataset.status!==newStatus)moveCard(editingCard,newStatus);updateColumnCounts();saveAllData();closeEditModal();showToast(t('saved'))}
+  function deleteTask(){if(!editingCard||!confirm(t('confirmDelete')))return;var card=editingCard,parent=card.parentNode,status=card.dataset.status,title=getCardTitle(card),desc=card.querySelector('.card-description')?card.querySelector('.card-description').textContent:'',ae=card.querySelector('.card-assignee'),assignee=ae?ae.textContent.trim():'',priority=card.dataset.priority||'task',dueDate=card.dataset.dueDate||'';card.remove();updateColumnCounts();saveAllData();closeEditModal();showToast(t('deleted'),()=>{var c=createCardElement(title,status,desc,assignee,dueDate,priority,null,card.dataset.id);parent.appendChild(c);attachCardEvents(c);updateColumnCounts();saveAllData();applyFilter(currentFilter);showToast(t('restored'))})}
+  function openAddPopup(preset){document.getElementById('quickTaskTitle').value='';document.getElementById('quickTaskDueDate').value='';updateStatusSelects();if(preset&&columns.find(c=>c.id===preset))document.getElementById('quickTaskStatus').value=preset;addTaskPopup.classList.add('active');setTimeout(()=>document.getElementById('quickTaskTitle').focus(),100)}
+  function closeAddPopup(){addTaskPopup.classList.remove('active')}
+  function addTaskFromPopup(){var title=document.getElementById('quickTaskTitle').value.trim();if(!title){showToast(t('enterTitle'));return}var status=document.getElementById('quickTaskStatus').value,priority=document.getElementById('quickTaskPriority').value,dueDate=document.getElementById('quickTaskDueDate').value;var card=createCardElement(title,status,'',profileData.name,dueDate,priority);var list=document.querySelector('.column[data-status="'+status+'"] .card-list');if(list){list.appendChild(card);attachCardEvents(card);updateColumnCounts();if(currentFilter!=='all'&&currentFilter!==status)card.classList.add('hidden');saveAllData();showToast(t('added'))}closeAddPopup()}
+  function updateStatusSelects(){[document.getElementById('editStatus'),document.getElementById('quickTaskStatus')].forEach(sel=>{if(!sel)return;var v=sel.value;sel.innerHTML=columns.map(c=>'<option value="'+c.id+'">'+c.name[currentLang]+'</option>').join('');if(columns.find(c=>c.id===v))sel.value=v})}
+  function rebuildBoard(){var existingCards=[];document.querySelectorAll('.task-card').forEach(c=>{existingCards.push({id:c.dataset.id,title:getCardTitle(c),desc:c.querySelector('.card-description')?c.querySelector('.card-description').textContent:'',assignee:c.querySelector('.card-assignee')?c.querySelector('.card-assignee').textContent.trim():profileData.name,status:c.dataset.status,date:c.querySelector('.card-date')?c.querySelector('.card-date').textContent.trim():'',priority:c.dataset.priority||'task',dueDate:c.dataset.dueDate||''})});boardContainer.innerHTML='';columns.forEach(col=>{var el=document.createElement('div');el.className='column';el.dataset.status=col.id;var isDefault=DEFAULT_COLUMNS.find(c=>c.id===col.id);el.innerHTML='<div class="column-header"><div class="column-title-group"><span class="column-dot" style="background:'+col.color+'"></span><span class="column-name">'+col.name[currentLang]+'</span><span class="column-count">0</span></div><div class="column-actions"><button class="column-action-btn column-add-btn" data-add-to="'+col.id+'"><i class="fas fa-plus"></i></button>'+(isDefault?'':'<button class="column-action-btn delete-column-btn" data-delete="'+col.id+'"><i class="fas fa-trash-alt"></i></button>')+'</div></div><div class="card-list"></div><div class="empty-column-message"><i class="far fa-circle"></i> '+t('empty')+'</div>';boardContainer.appendChild(el)});var addBtn=document.createElement('button');addBtn.className='add-column-btn';addBtn.id='addColumnTrigger';addBtn.innerHTML='<i class="fas fa-plus"></i> '+t('addList');boardContainer.appendChild(addBtn);attachColumnEvents();existingCards.forEach(cd=>{var col=columns.find(c=>c.id===cd.status);if(col){var card=createCardElement(cd.title,cd.status,cd.desc,cd.assignee,cd.dueDate,cd.priority,cd.date,parseInt(cd.id));var list=document.querySelector('.column[data-status="'+cd.status+'"] .card-list');if(list){list.appendChild(card);attachCardEvents(card)}}});var maxId=Math.max(...existingCards.map(c=>parseInt(c.id)||0),0);taskIdCounter=Math.max(taskIdCounter,maxId+1);updateFilterTabs();updateStatusSelects();updateColumnCounts();saveAllData()}
+  function attachColumnEvents(){document.querySelectorAll('.column-add-btn').forEach(b=>b.addEventListener('click',()=>openAddPopup(b.dataset.addTo)));document.querySelectorAll('.delete-column-btn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();var colId=b.dataset.delete,col=columns.find(c=>c.id===colId);if(col&&confirm("'"+col.name[currentLang]+"' "+t('confirmDeleteCol'))){document.querySelectorAll('.column[data-status="'+colId+'"] .task-card').forEach(c=>c.remove());columns=columns.filter(c=>c.id!==colId);rebuildBoard();showToast(t('colDeleted'))}}));document.querySelectorAll('.column').forEach(col=>{col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('drag-over')});col.addEventListener('dragleave',()=>col.classList.remove('drag-over'));col.addEventListener('drop',e=>{e.preventDefault();col.classList.remove('drag-over');var dc=document.querySelector('.task-card.dragging');if(dc)moveCard(dc,col.dataset.status)})});var at=document.getElementById('addColumnTrigger');if(at){at.addEventListener('click',()=>{var name=prompt(t('newList'));if(name&&name.trim()){columns.push({id:'col_'+Date.now(),name:{ko:name.trim(),en:name.trim()},color:'#FEE500'});rebuildBoard();showToast(t('colAdded'))}})}}
+
+  function saveAllData(){if(!currentUser)return;var tasks=[];document.querySelectorAll('.task-card').forEach(c=>{tasks.push({id:c.dataset.id,title:getCardTitle(c),desc:c.querySelector('.card-description')?c.querySelector('.card-description').textContent:'',assignee:c.querySelector('.card-assignee')?c.querySelector('.card-assignee').textContent.trim():profileData.name,status:c.dataset.status,date:c.querySelector('.card-date')?c.querySelector('.card-date').textContent.trim():'',priority:c.dataset.priority||'task',dueDate:c.dataset.dueDate||''})});try{localStorage.setItem(getKey(),JSON.stringify({tasks,nextId:taskIdCounter,isDarkMode,accentColor,columns,profile:profileData,lang:currentLang}))}catch(e){}}
+  function loadAllData(){if(!currentUser)return;var saved=localStorage.getItem(getKey());if(!saved){rebuildBoard();return}try{var data=JSON.parse(saved);taskIdCounter=data.nextId||1;if(data.isDarkMode!==undefined)isDarkMode=data.isDarkMode;if(data.accentColor)accentColor=data.accentColor;if(data.columns&&data.columns.length)columns=JSON.parse(JSON.stringify(data.columns));if(data.profile){profileData.name=data.profile.name||'ME';profileData.photo=data.profile.photo||null}if(data.lang)currentLang=data.lang;applyTheme();updateProfileUI();rebuildBoard();document.querySelectorAll('.task-card').forEach(c=>c.remove());(data.tasks||[]).forEach(t=>{if(columns.find(c=>c.id===t.status)){var card=createCardElement(t.title,t.status,t.desc,t.assignee,t.dueDate,t.priority,t.date,parseInt(t.id));var list=document.querySelector('.column[data-status="'+t.status+'"] .card-list');if(list){list.appendChild(card);attachCardEvents(card)}}});var maxId=Math.max(...(data.tasks||[]).map(t=>parseInt(t.id)||0),0);taskIdCounter=Math.max(taskIdCounter,maxId+1);updateFilterTabs();updateStatusSelects();updateColumnCounts();updateUILanguage()}catch(e){rebuildBoard()}}
+  function exportBoard(){var d=localStorage.getItem(getKey());if(!d){showToast(t('noData'));return}var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([d],{type:'application/json'}));a.download='kanban_backup.json';a.click()}
+  function importBoard(){var inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=e=>{var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=ev=>{try{var data=JSON.parse(ev.target.result);if(data.tasks){localStorage.setItem(getKey(),JSON.stringify(data));loadAllData();showToast(t('imported'))}}catch(ex){showToast(t('invalidFile'))}};r.readAsText(f)};inp.click()}
+  function resetBoard(){if(!confirm(t('confirmReset')))return;localStorage.removeItem(getKey());columns=JSON.parse(JSON.stringify(DEFAULT_COLUMNS));document.querySelectorAll('.task-card').forEach(c=>c.remove());taskIdCounter=1;rebuildBoard();showToast(t('reset'))}
+
+  // Sign In
+  document.getElementById('signInForm').addEventListener('submit',e=>{e.preventDefault();const u=document.getElementById('signInUser').value.trim().toLowerCase(),p=document.getElementById('signInPass').value;if(!u||!p)return;const users=getUsers();if(users[u]&&users[u].password===hashPW(p)){login({id:u,name:users[u].name,photo:users[u].photo||null})}else{document.getElementById('loginError').textContent=t('loginFailed')}});
+
+  // Sign Up
+  document.getElementById('signUpForm').addEventListener('submit',e=>{e.preventDefault();const name=document.getElementById('signUpName').value.trim(),u=document.getElementById('signUpUser').value.trim().toLowerCase(),p=document.getElementById('signUpPass').value;if(!name||!u||!p)return;const users=getUsers();if(users[u]){document.getElementById('loginError').textContent=t('userExists');return}users[u]={name,password:hashPW(p),photo:null};saveUsers(users);document.getElementById('signUpForm').style.display='none';document.getElementById('signInForm').style.display='flex';document.getElementById('loginError').textContent='';showToast(t('signupDone'))});
+
+  document.getElementById('loginToggle').addEventListener('click',()=>{const si=document.getElementById('signInForm'),su=document.getElementById('signUpForm'),isSu=su.style.display!=='none';si.style.display=isSu?'flex':'none';su.style.display=isSu?'none':'flex';document.getElementById('loginError').textContent=''});
+  document.getElementById('guestBtn').addEventListener('click',()=>login({id:'guest_'+Date.now(),name:'Guest',photo:null}));
+  document.getElementById('logoutBtn').addEventListener('click',logout);
+
+  // Settings
+  document.getElementById('langKoBtn').addEventListener('click',()=>setLanguage('ko'));
+  document.getElementById('langEnBtn').addEventListener('click',()=>setLanguage('en'));
+  document.getElementById('lightModeBtn').addEventListener('click',()=>{isDarkMode=false;applyTheme()});
+  document.getElementById('darkModeBtn').addEventListener('click',()=>{isDarkMode=true;applyTheme()});
+
+  document.getElementById('searchBtn').addEventListener('click',()=>{var term=prompt(currentLang==='ko'?'작업 검색:':'Search tasks:');if(term===null)return;if(!term){document.querySelectorAll('.task-card').forEach(c=>c.style.display='');return}var txt=term.toLowerCase();document.querySelectorAll('.task-card').forEach(c=>{var title=getCardTitle(c).toLowerCase(),desc=(c.querySelector('.card-description')?c.querySelector('.card-description').textContent:'').toLowerCase();c.style.display=(title.includes(txt)||desc.includes(txt))?'':'none'})});
+  document.getElementById('shareBtn').addEventListener('click',()=>{var d=localStorage.getItem(getKey());if(!d){showToast(t('noData'));return}var link=location.origin+location.pathname+'?share='+btoa(encodeURIComponent(d));if(navigator.share){navigator.share({title:'Kanban Board',text:'My Kanban board',url:link}).catch(()=>{})}else{prompt('Share link:',link)}});
+
+  viewTabs.addEventListener('click',e=>{var tab=e.target.closest('.view-tab');if(!tab)return;viewTabs.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');applyFilter(tab.dataset.filter)});
+  document.getElementById('modalClose').addEventListener('click',closeEditModal);taskModal.addEventListener('click',e=>{if(e.target===taskModal)closeEditModal()});
+  document.getElementById('saveTaskBtn').addEventListener('click',saveTaskChanges);document.getElementById('deleteTaskBtn').addEventListener('click',deleteTask);
+  document.getElementById('settingsBtn').addEventListener('click',()=>settingsModal.classList.add('active'));
+  document.getElementById('settingsClose').addEventListener('click',()=>settingsModal.classList.remove('active'));
+  settingsModal.addEventListener('click',e=>{if(e.target===settingsModal)settingsModal.classList.remove('active')});
+  document.getElementById('settingsExport').addEventListener('click',exportBoard);document.getElementById('settingsImport').addEventListener('click',importBoard);document.getElementById('settingsReset').addEventListener('click',resetBoard);
+  document.getElementById('profileBtn').addEventListener('click',()=>{updateProfileUI();profileModal.classList.add('active')});
+  document.getElementById('profileClose').addEventListener('click',()=>profileModal.classList.remove('active'));
+  profileModal.addEventListener('click',e=>{if(e.target===profileModal)profileModal.classList.remove('active')});
+  document.getElementById('saveProfileBtn').addEventListener('click',()=>{profileData.name=document.getElementById('profileName').value.trim()||'ME';updateProfileUI();saveAllData();profileModal.classList.remove('active');showToast(t('profileSaved'))});
+  document.getElementById('changePhotoBtn').addEventListener('click',()=>document.getElementById('photoInput').click());
+  document.getElementById('removePhotoBtn').addEventListener('click',()=>{profileData.photo=null;updateProfileUI();saveAllData();showToast(t('photoRemoved'))});
+  document.getElementById('photoInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{profileData.photo=ev.target.result;updateProfileUI();saveAllData();showToast(t('profileSaved'))};r.readAsDataURL(f)});
+  document.getElementById('popupClose').addEventListener('click',closeAddPopup);document.getElementById('popupCancel').addEventListener('click',closeAddPopup);
+  addTaskPopup.addEventListener('click',e=>{if(e.target===addTaskPopup)closeAddPopup()});
+  document.getElementById('popupAdd').addEventListener('click',addTaskFromPopup);
+  document.getElementById('quickTaskTitle').addEventListener('keypress',e=>{if(e.key==='Enter')addTaskFromPopup()});
+  document.getElementById('globalAddBtn').addEventListener('click',()=>openAddPopup());
+  document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='n'){e.preventDefault();openAddPopup()}if(e.key==='Escape'){if(addTaskPopup.classList.contains('active'))closeAddPopup();else if(taskModal.classList.contains('active'))closeEditModal();else if(settingsModal.classList.contains('active'))settingsModal.classList.remove('active');else if(profileModal.classList.contains('active'))profileModal.classList.remove('active')}});
+
+  function loadSharedBoard(){var p=new URLSearchParams(location.search).get('share');if(!p)return;try{var data=JSON.parse(decodeURIComponent(atob(p)));if(data.tasks){localStorage.setItem(getKey(),JSON.stringify(data));loadAllData();showToast(currentLang==='ko'?'공유된 보드를 불러왔습니다':'Shared board loaded')}}catch(e){}history.replaceState({},'',location.pathname)}
+
+  applyTheme();loginScreen.classList.remove('hidden');
+})();
+</script>
+</body>
+</html>
