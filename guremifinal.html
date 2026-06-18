@@ -4,21 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>개미 Note</title>
-  
-  <!-- PWA Meta Tags -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="개미 Note">
-  <meta name="theme-color" content="#000000">
-  <meta name="mobile-web-app-capable" content="yes">
-  
-  <!-- App Icon - Gold 개 on black -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23000000' rx='90'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-family='Georgia,serif' font-size='320' fill='%23d4a843' font-weight='bold' filter='url(%23glow)'%3E%EA%B0%9C%3C/text%3E%3Cdefs%3E%3Cfilter id='glow'%3E%3CfeGaussianBlur stdDeviation='8' result='blur'/%3E%3CfeMerge%3E%3CfeMergeNode in='blur'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3C/svg%3E">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23000000' rx='90'/%3E%3Ctext x='256' y='340' text-anchor='middle' font-family='Georgia,serif' font-size='320' fill='%23d4a843' font-weight='bold' filter='url(%23glow)'%3E%EA%B0%9C%3C/text%3E%3Cdefs%3E%3Cfilter id='glow'%3E%3CfeGaussianBlur stdDeviation='8' result='blur'/%3E%3CfeMerge%3E%3CfeMergeNode in='blur'/%3E%3CfeMergeNode in='SourceGraphic'/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3C/svg%3E">
-  
-  <!-- Manifest with correct start URL -->
-  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%EA%B0%9C%EB%AF%B8%20Note%22%2C%22short_name%22%3A%22%EA%B0%9C%EB%AF%B8%22%2C%22start_url%22%3A%22https%3A%2F%2Fantiebiotic.github.io%2Fgureminote.html%22%2C%22scope%22%3A%22https%3A%2F%2Fantiebiotic.github.io%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%23000000%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20512%20512'%253E%253Crect%20width%3D'512'%20height%3D'512'%20fill%3D'%2523000000'%20rx%3D'90'%2F%253E%253Ctext%20x%3D'256'%20y%3D'340'%20text-anchor%3D'middle'%20font-family%3D'Georgia%2Cserif'%20font-size%3D'320'%20fill%3D'%2523d4a843'%20font-weight%3D'bold'%20filter%3D'url(%2523glow)'%253E%25EA%25B0%259C%253C%2Ftext%253E%253Cdefs%253E%253Cfilter%20id%3D'glow'%253E%253CfeGaussianBlur%20stdDeviation%3D'8'%20result%3D'blur'%2F%253E%253CfeMerge%253E%253CfeMergeNode%20in%3D'blur'%2F%253E%253CfeMergeNode%20in%3D'SourceGraphic'%2F%253E%253C%2FfeMerge%253E%253C%2Ffilter%253E%253C%2Fdefs%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
-  
   <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Gothic+A1:wght@400;500;600;700&family=Noto+Serif+KR:wght@400;600;700&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -268,7 +253,7 @@
 
   function filtered(){let f=[...notes];const q=(searchInput.value||'').toLowerCase();if(q)f=f.filter(n=>stripHTML(n.text).toLowerCase().includes(q));if(activeFilter==='pinned')f=f.filter(n=>n.pinned);else if(activeFilter==='images')f=f.filter(n=>n.images&&n.images.length>0);else if(activeFilter!=='all'&&customTags.includes(activeFilter))f=f.filter(n=>n.tags&&n.tags.includes(activeFilter));return f.sort((a,b)=>b.time-a.time);}
   function renderList(){const f=filtered();if(!f.length){noteList.innerHTML=`<div class="empty-list">( •_•)<span>${t('noNotes')}</span></div>`;return;}noteList.innerHTML=f.map(n=>`<div class="note-row${n.id===currentId?' active':''}" data-id="${n.id}"><div class="note-avatar">${avatarHTML(n.id,n.text,n.images)}</div><div class="note-body">${editingSubjectId===n.id?`<input class="note-subject-input" value="${esc(getTitle(n.text))}" data-subject-id="${n.id}" maxlength="40">`:`<div class="note-subject" data-subject-id="${n.id}">${esc(getTitle(n.text))}</div>`}<div class="note-preview">${esc(getPreview(n.text)||(n.images&&n.images.length?`${n.images.length} images`:n.links&&n.links.length?`${n.links.length} links`:''))}</div></div><div class="note-meta"><span class="note-time">${fmtTime(n.time)}</span><button class="note-delete" data-del="${n.id}">✕</button></div></div>`).join('');document.querySelectorAll('.note-subject-input').forEach(inp=>{inp.focus();inp.select();inp.addEventListener('blur',()=>saveSubjectEdit(inp));inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveSubjectEdit(inp);}});});}
-  function saveSubjectEdit(inp){const id=inp.dataset.subjectId;const nt=inp.value.trim();if(nt&&id){const note=notes.find(n=>n.id===id);if(note){const lines=stripHTML(note.text).split('\n');lines[0]=nt;note.text=lines.join('\n');note.time=Date.now();saveNoteToDB();}}editingSubjectId=null;renderList();}
+  function saveSubjectEdit(inp){const id=inp.dataset.subjectId;const nt=inp.value.trim();if(nt&&id){const note=notes.find(n=>n.id===id);if(note){const originalText=stripHTML(note.text);const lines=originalText.split('\n');lines[0]=nt;note.text=lines.join('\n');note.time=Date.now();saveNoteToDB();}}editingSubjectId=null;renderList();}
 
   function openNote(id){const n=notes.find(x=>x.id===id);if(!n)return;currentId=id;editor.innerHTML=n.text||'';editorTime.textContent=fmtTime(n.time);currentImages=n.images?[...n.images]:[];currentLinks=n.links?[...n.links]:[];currentFontSize=n.fontSize||15;currentFontFamily=n.fontFamily||'gothic-a1';applyEditorStyle();emptyPanel.style.display='none';panelContent.style.display='flex';if(window.innerWidth<720){mainPanel.classList.remove('mobile-closing');mainPanel.classList.add('mobile-open');}renderImageGallery();renderLinkCards();renderList();renderTagChips();buildToolsMenu();editor.focus();}
   function openNew(){currentId=null;editor.innerHTML='';editorTime.textContent='';currentImages=[];currentLinks=[];currentFontSize=15;currentFontFamily='gothic-a1';applyEditorStyle();emptyPanel.style.display='none';panelContent.style.display='flex';if(window.innerWidth<720){mainPanel.classList.remove('mobile-closing');mainPanel.classList.add('mobile-open');}renderImageGallery();renderLinkCards();renderList();renderTagChips();buildToolsMenu();editor.focus();}
@@ -317,7 +302,6 @@
   window.addEventListener('resize',()=>{if(window.innerWidth>=720){mainPanel.classList.remove('mobile-open','mobile-closing');if(currentId){emptyPanel.style.display='none';panelContent.style.display='flex';}}});
   panelContent.addEventListener('dragover',e=>{e.preventDefault();});panelContent.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)handleImageUpload(e.dataTransfer.files);});
 
-  if('serviceWorker' in navigator){navigator.serviceWorker.register('data:application/javascript,self.addEventListener(%22fetch%22,e=>{})');}
   (async()=>{loadSettings();loadTags();const savedRef=localStorage.getItem('ants_ref');if(savedRef){refCode=savedRef;await loadCloud(savedRef);}else{refCode=genRef();notes=[];localStorage.setItem('ants_ref',refCode);}applyUI();renderAll();})();
 })();
 </script>
