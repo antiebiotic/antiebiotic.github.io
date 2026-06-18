@@ -163,13 +163,11 @@
 </head>
 <body>
 <div class="app" id="app">
-  <div class="sidebar">
-    <div class="sidebar-header"><h1>개미 Note</h1><div class="header-actions"><div class="save-indicator"><span class="save-dot saved" id="saveDot"></span><span id="saveLabel">저장됨</span></div><button class="icon-btn" id="settingsBtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div></div>
-    <div class="search-wrap"><div class="search-box"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="search-input" id="searchInput" placeholder="문서 검색"></div></div>
-    <div class="filter-row" id="filterRow"><button class="filter-tab active" data-filter="all" id="filterAllBtn">전체</button><button class="filter-tab" data-filter="pinned" id="filterPinnedBtn">고정</button><button class="filter-tab" data-filter="images" id="filterImagesBtn">이미지</button><button class="add-filter-btn" id="addFilterBtn">+</button></div>
-    <div class="note-list" id="noteList"></div>
-    <button class="new-note-btn" id="newNoteBtn"><svg width="14" height="14" viewBox="0 0 24 24" style="stroke:currentColor;fill:none;stroke-width:2.5;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span id="newNoteLabel">새 문서</span></button>
-  </div>
+  <div class="sidebar"><div class="sidebar-header"><h1>개미 Note</h1><div class="header-actions"><div class="save-indicator"><span class="save-dot saved" id="saveDot"></span><span id="saveLabel">저장됨</span></div><button class="icon-btn" id="settingsBtn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div></div>
+  <div class="search-wrap"><div class="search-box"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="search-input" id="searchInput" placeholder="문서 검색"></div></div>
+  <div class="filter-row" id="filterRow"><button class="filter-tab active" data-filter="all" id="filterAllBtn">전체</button><button class="filter-tab" data-filter="pinned" id="filterPinnedBtn">고정</button><button class="filter-tab" data-filter="images" id="filterImagesBtn">이미지</button><button class="add-filter-btn" id="addFilterBtn">+</button></div>
+  <div class="note-list" id="noteList"></div>
+  <button class="new-note-btn" id="newNoteBtn"><svg width="14" height="14" viewBox="0 0 24 24" style="stroke:currentColor;fill:none;stroke-width:2.5;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span id="newNoteLabel">새 문서</span></button></div>
   <div class="main-panel" id="mainPanel">
     <div class="panel-header"><button class="back-btn" id="backBtn"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><div class="title-dropdown" id="titleDropdown"><span class="panel-title" id="panelTitle">문서</span><span class="chevron">▾</span><div class="dropdown-menu" id="toolsMenu"></div></div></div>
     <div class="panel-content" id="panelContent"><div class="editor-rich" id="editor" contenteditable="true" data-placeholder="내용을 입력하세요..."></div></div>
@@ -202,7 +200,7 @@
   const i18n={ko:{title:"개미 Note",saved:'저장됨',newNote:'새 문서',placeholder:'내용을 입력하세요...',save:'저장',delete:'삭제',memo:'문서',settings:'설정',theme:'테마',lang:'언어',export:'내보내기',import:'가져오기',noNotes:'문서가 없습니다',deleteConfirm:'이 문서를 삭제할까요?',savedToast:'저장됨',refLabel:'참조 코드',selectNote:'문서를 선택하세요',search:'문서 검색',filterAll:'전체',filterPinned:'고정',filterImages:'이미지',addTag:'태그',addTagToNote:'태그 추가',noTags:'태그 없음',imageAdded:'이미지 추가됨',linkAdded:'링크 추가됨',docxExported:'DOCX 다운로드됨',fontSection:'글자 스타일',sizeSection:'글자 크기',toolsSection:'도구',exportSection:'내보내기',fontDefault:'기본',fontSerif:'명조',fontHand:'손글씨',fontPen:'펜글씨',sizeSmall:'작게',sizeNormal:'보통',sizeLarge:'크게',sizeXLarge:'아주 크게',imageAdd:'이미지 추가',shareJSON:'JSON',shareTXT:'TXT',shareDOCX:'DOCX',shareKakao:'카카오톡',deleteItem:'삭제'},en:{title:"Ant's Docs",saved:'Saved',newNote:'New Doc',placeholder:'Type...',save:'Save',delete:'Delete',memo:'Document',settings:'Settings',theme:'Theme',lang:'Language',export:'Export',import:'Import',noNotes:'No documents',deleteConfirm:'Delete?',savedToast:'Saved',refLabel:'Ref Code',selectNote:'Select a document',search:'Search',filterAll:'All',filterPinned:'Pinned',filterImages:'Images',addTag:'Tag',addTagToNote:'Add tag',noTags:'No tags',imageAdded:'Image added',linkAdded:'Link added',docxExported:'DOCX downloaded',fontSection:'Font Style',sizeSection:'Font Size',toolsSection:'Tools',exportSection:'Export',fontDefault:'Default',fontSerif:'Serif',fontHand:'Handwriting',fontPen:'Pen Script',sizeSmall:'Small',sizeNormal:'Normal',sizeLarge:'Large',sizeXLarge:'X-Large',imageAdd:'Add Image',shareJSON:'JSON',shareTXT:'TXT',shareDOCX:'DOCX',shareKakao:'KakaoTalk',deleteItem:'Delete'}};
   function t(k){return i18n[settings.lang]?.[k]||i18n.ko[k]||k;}
 
-  const DB={name:'AntsNotesDBv4',version:1,storeName:'notes',
+  const DB={name:'AntsNotesDBv5',version:1,storeName:'notes',
     init(){return new Promise((resolve,reject)=>{const r=indexedDB.open(this.name,this.version);r.onupgradeneeded=(e)=>{const db=e.target.result;if(!db.objectStoreNames.contains(this.storeName))db.createObjectStore(this.storeName,{keyPath:'id'});};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});},
     async save(note){const db=await this.init();return new Promise((resolve,reject)=>{const tx=db.transaction(this.storeName,'readwrite');tx.objectStore(this.storeName).put(note);tx.oncomplete=()=>resolve(true);tx.onerror=()=>reject(tx.error);});},
     async all(){const db=await this.init();return new Promise((resolve,reject)=>{const tx=db.transaction(this.storeName,'readonly');const r=tx.objectStore(this.storeName).getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});},
@@ -219,14 +217,14 @@
   function saveSettings(){localStorage.setItem('ants_settings',JSON.stringify(settings));}
 
   async function saveNote(){
-    if(!currentId)return;
+    if(!currentId){console.warn('saveNote: no currentId');return;}
     const existing=notes.find(n=>n.id===currentId);
     const note={id:currentId,text:els.editor.innerHTML,time:Date.now(),pinned:existing?existing.pinned:false,tags:existing?existing.tags:[],images:[...currentImages],links:[...currentLinks],fontSize:currentFontSize,fontFamily:currentFontFamily,refCode};
     const idx=notes.findIndex(n=>n.id===currentId);
     if(idx>=0)notes[idx]=note;else notes.push(note);
-    try{await DB.save(note);}catch(e){}
+    try{await DB.save(note);}catch(e){console.error('DB save failed',e);}
     els.saveDot.classList.add('saved');els.saveLabel.textContent=t('saved');setTimeout(()=>{els.saveDot.classList.remove('saved');els.saveLabel.textContent=t('saved');},1500);
-    els.editorTime.textContent=fmtTime(Date.now());renderTagChips();
+    els.editorTime.textContent=fmtTime(Date.now());renderTagChips();renderList();
   }
   let saveTimer=null;
   function autoSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveNote,600);}
@@ -283,13 +281,7 @@
 
   function showTagInput(){const existing=document.querySelector('.filter-input-wrap');if(existing)existing.remove();const wrap=document.createElement('span');wrap.className='filter-input-wrap';wrap.innerHTML=`<input class="filter-input" placeholder="${t('addTag')}" maxlength="12"><button class="filter-input-confirm">✓</button>`;els.filterRow.insertBefore(wrap,els.addFilterBtn);const inp=wrap.querySelector('.filter-input');inp.focus();let done=false;const confirm=()=>{if(done)return;done=true;const name=inp.value.trim();if(name&&!customTags.includes(name)&&name!=='all'&&name!=='pinned'&&name!=='images'){customTags.push(name);saveTags();renderFilterTabs();}wrap.remove();};wrap.querySelector('.filter-input-confirm').addEventListener('mousedown',e=>{e.preventDefault();confirm();});inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();confirm();}});inp.addEventListener('blur',()=>{setTimeout(()=>{if(!done)wrap.remove();},250);});}
 
-  els.editor.addEventListener('click',e=>{
-    const rimg=e.target.closest('[data-rimg]');if(rimg){e.preventDefault();currentImages.splice(parseInt(rimg.dataset.rimg),1);els.editor.innerHTML=rebuildEditorHTML();saveNote();return;}
-    const img=e.target.closest('img[data-img]');if(img){els.lightboxImg.src=img.src;els.lightbox.classList.add('open');return;}
-    const rlink=e.target.closest('[data-rlink]');if(rlink){e.preventDefault();currentLinks.splice(parseInt(rlink.dataset.rlink),1);els.editor.innerHTML=rebuildEditorHTML();saveNote();return;}
-    const link=e.target.closest('[data-link]');if(link){window.open(link.dataset.link,'_blank');}
-  });
-
+  els.editor.addEventListener('click',e=>{const rimg=e.target.closest('[data-rimg]');if(rimg){e.preventDefault();currentImages.splice(parseInt(rimg.dataset.rimg),1);els.editor.innerHTML=rebuildEditorHTML();saveNote();return;}const img=e.target.closest('img[data-img]');if(img){els.lightboxImg.src=img.src;els.lightbox.classList.add('open');return;}const rlink=e.target.closest('[data-rlink]');if(rlink){e.preventDefault();currentLinks.splice(parseInt(rlink.dataset.rlink),1);els.editor.innerHTML=rebuildEditorHTML();saveNote();return;}const link=e.target.closest('[data-link]');if(link){window.open(link.dataset.link,'_blank');}});
   els.lightboxClose.addEventListener('click',()=>els.lightbox.classList.remove('open'));els.lightbox.addEventListener('click',e=>{if(e.target===els.lightbox)els.lightbox.classList.remove('open');});
   els.imageFileInput.addEventListener('change',e=>{if(e.target.files.length)handleImageUpload(e.target.files);els.imageFileInput.value='';});
 
@@ -297,10 +289,7 @@
   document.addEventListener('click',()=>closeDropdowns());
   els.toolsMenu.addEventListener('click',e=>{const item=e.target.closest('.dropdown-item');if(!item)return;const action=item.dataset.action;if(action==='font'){currentFontFamily=item.dataset.font;applyEditorStyle();closeDropdowns();saveNote();}else if(action==='size'){currentFontSize=parseInt(item.dataset.size);applyEditorStyle();closeDropdowns();saveNote();}else if(action==='image'){els.imageFileInput.click();closeDropdowns();}else if(action==='share-json')shareAsJSON();else if(action==='share-txt')shareAsTXT();else if(action==='share-docx')shareAsDOCX();else if(action==='share-kakao')shareToKakao();else if(action==='delete'){delCurrent();closeDropdowns();}});
 
-  els.noteList.addEventListener('click',e=>{
-    const del=e.target.closest('[data-del]');if(del){e.stopPropagation();const id=del.dataset.del;notes=notes.filter(n=>n.id!==id);DB.del(id).catch(()=>{});if(currentId===id){currentId=null;els.editor.innerHTML='';els.editorTime.textContent='';currentImages=[];currentLinks=[];els.emptyPanel.style.display='flex';els.panelContent.style.display='none';}renderAll();return;}
-    if(e.target.closest('input'))return;const row=e.target.closest('.note-row');if(row)openNote(row.dataset.id);
-  });
+  els.noteList.addEventListener('click',e=>{const del=e.target.closest('[data-del]');if(del){e.stopPropagation();const id=del.dataset.del;notes=notes.filter(n=>n.id!==id);DB.del(id).catch(()=>{});if(currentId===id){currentId=null;els.editor.innerHTML='';els.editorTime.textContent='';currentImages=[];currentLinks=[];els.emptyPanel.style.display='flex';els.panelContent.style.display='none';}renderAll();return;}if(e.target.closest('input'))return;const row=e.target.closest('.note-row');if(row)openNote(row.dataset.id);});
   els.searchInput.addEventListener('input',renderList);els.newNoteBtn.addEventListener('click',openNew);els.backBtn.addEventListener('click',closeEditor);
   els.saveBtn.addEventListener('click',()=>{closeEditor();showToast(t('savedToast'));});
   els.editor.addEventListener('input',autoSave);els.editor.addEventListener('paste',handlePaste);
@@ -319,7 +308,7 @@
   window.addEventListener('resize',()=>{if(window.innerWidth>=720){els.mainPanel.classList.remove('mobile-open','mobile-closing');if(currentId){els.emptyPanel.style.display='none';els.panelContent.style.display='block';}}});
   els.panelContent.addEventListener('dragover',e=>{e.preventDefault();});els.panelContent.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)handleImageUpload(e.dataTransfer.files);});
 
-  if(location.search.includes('reset')){indexedDB.deleteDatabase('AntsNotesDBv4');localStorage.removeItem('ants_ref');localStorage.removeItem('ants_settings');localStorage.removeItem('ants_tags');document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;font-size:18px;color:#8B6914;">초기화 완료 — 앱을 새로고침하세요</div>';}
+  if(location.search.includes('reset')){indexedDB.deleteDatabase('AntsNotesDBv5');localStorage.removeItem('ants_ref');localStorage.removeItem('ants_settings');localStorage.removeItem('ants_tags');document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;font-size:18px;color:#8B6914;">초기화 완료 — 앱을 새로고침하세요</div>';}
   else{(async()=>{loadSettings();loadTags();const savedRef=localStorage.getItem('ants_ref');if(savedRef){refCode=savedRef;await loadCloud(savedRef);}else{refCode=genRef();notes=[];localStorage.setItem('ants_ref',refCode);}applyUI();renderAll();})();}
 })();
 </script>
